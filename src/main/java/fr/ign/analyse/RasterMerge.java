@@ -40,7 +40,7 @@ public class RasterMerge {
 	 * merge multiple raster to get their replication. Overloaded in the case of a raw mupcity output; /!\ Rasters must be the same size /!\
 	 * 
 	 * @param folderIn
-	 *            : file containing files containing raster to merge
+	 *            : folder containing files containing raster to merge
 	 * @param fileOut
 	 *            : raster out
 	 * @param nameSimul
@@ -50,7 +50,7 @@ public class RasterMerge {
 	 * @return the raster file
 	 * @throws Exception
 	 */
-	public static boolean merge(File folderIn, File fileOut, String nameSimul, final String filter) throws Exception {
+	public static File merge(File folderIn, File fileOut, String nameSimul, final String filter) throws Exception {
 
 		List<File> select = new ArrayList<>();
 
@@ -69,20 +69,19 @@ public class RasterMerge {
 		return merge(select, fileOut, echelle);
 
 	}
+/**
+ * overload if the enveloppe needs a crop (in case of a changing grid)
+ * @param folderIn
+ * @param fileOut
+ * @param echelle
+ * @return
+ * @throws Exception
+ */
+	public static File merge(List<File> folderIn, File fileOut, int echelle) throws Exception {
+		return merge(folderIn, fileOut, echelle, false);
+	}
 
-	/**
-	 * merge multiple raster to get their replication /!\ Rasters must be the same size /!\
-	 * 
-	 * @param folderIn
-	 *            file tableau containing the rasterfiles
-	 * @param fileOut
-	 *            raster out
-	 * @param echelle
-	 *            the granularity of your rasters
-	 * @return the raster file
-	 * @throws Exception
-	 */
-	public static boolean merge(List<File> folderIn, File fileOut, int echelle) throws Exception {
+	public static File merge(List<File> folderIn, File fileOut, int echelle, boolean crop) throws Exception {
 
 		// setting of useless parameters
 		ParameterValue<OverviewPolicy> policy = AbstractGridFormat.OVERVIEW_POLICY.createValue();
@@ -109,13 +108,24 @@ public class RasterMerge {
 		double xMin = env.getMinX();
 		double yMin = env.getMinY();
 
+		int longueur = imagePixelData.length;
+		int largeur = imagePixelData[0].length;
+
+		// if a crop on the area is needed
+		if (crop) {
+			xMin = xMin + echelle;
+			longueur = longueur - echelle;
+			yMin = yMin + echelle;
+			largeur = largeur - echelle;
+		}
+
 		for (int fInd = 0; fInd < (folderIn.size()); fInd++) {
 
 			GeoTiffReader reader = new GeoTiffReader(folderIn.get(fInd));
 			GridCoverage2D coverage = reader.read(params);
 
-			for (int i = 0; i < imagePixelData.length; ++i) {
-				for (int j = 0; j < imagePixelData[0].length; ++j) {
+			for (int i = 0; i < longueur; ++i) {
+				for (int j = 0; j < largeur; ++j) {
 					DirectPosition2D pt = new DirectPosition2D(xMin + (2 * i + 1) * echelle / 2, yMin + (2 * j + 1) * echelle / 2);
 					float[] val = (float[]) coverage.evaluate(pt);
 					if (val[0] > 0) {
@@ -138,7 +148,7 @@ public class RasterMerge {
 			}
 		}
 		writeGeotiff(fileOut, imgpix3, env);
-		return true;
+		return fileOut;
 	}
 
 	public static void writeGeotiff(File fileName, float[][] imagePixelData, Envelope2D env) {

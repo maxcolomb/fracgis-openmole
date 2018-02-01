@@ -226,13 +226,14 @@ public class DataSetSelec {
 	}
 
 	public static File[] selectFileAnalyse(File file) {
-		File[] fileSelec = new File[2];
+		File[] fileSelec = new File[3];
 		for (File f : file.listFiles()) {
 			if (f.getName().startsWith("batiment")) {
 				fileSelec[1] = f;
-			} else if (f.getName().startsWith("admin")) {
+			} else if (f.getName().startsWith("discrete")) {
 				fileSelec[0] = f;
 			}
+
 		}
 		return fileSelec;
 	}

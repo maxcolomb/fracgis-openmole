@@ -19,7 +19,6 @@ import org.opengis.parameter.ParameterValue;
 public class convertRasterToCsv {
 
 	public static void main(String[] args) throws IOException {
-		// TODO Auto-generated method stub
 		File rastFile = new File("/home/mcolomb/informatique/MUP/explo/enveloppes/evalE-moy-NU.tif");
 		ParameterValue<OverviewPolicy> policy = AbstractGridFormat.OVERVIEW_POLICY.createValue();
 		policy.setValue(OverviewPolicy.IGNORE);
