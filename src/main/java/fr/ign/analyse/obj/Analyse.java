@@ -125,50 +125,57 @@ public class Analyse {
 		return projetCollec.size();
 	}
 
-	public Hashtable<String, List<File>> getProjetBySeuil() {
-		Hashtable<String, List<File>> listGen = new Hashtable<String, List<File>>();
-		for (String seuil : seuilCollec) {
-			List<File> particularList = new ArrayList<File>();
-			listGen.put(seuil, particularList);
-			for (ProjetAnalyse pa : projetCollec) {
-				if (pa.getSeuil().equals(seuil)) {
-					particularList.add(pa.getProjFile());
-				}
-			}
-		}
-		return listGen;
-	}
-
-	//faut il renvoyer des objets plutot que des files? 
-	public Hashtable<String, List<File>> getProjetByCellmin() {
-		Hashtable<String, List<File>> listGen = new Hashtable<String, List<File>>();
-
-		for (String cellMin : cellMinCollec) {
-			List<File> particularList = new ArrayList<File>();
-			for (ProjetAnalyse pa : projetCollec) {
-				if (pa.getSizeCell().equals(cellMin)) {
-					particularList.add(pa.getProjFile());
-				}
-			}
-			listGen.put(cellMin, particularList);
-		}
-		return listGen;
-	}
-	public Hashtable<String, List<File>> getScenarByCellmin() throws FileNotFoundException {
-		Hashtable<String, List<File>> listGen = getProjetByCellmin();
-		Hashtable<String, List<File>> listProj = new Hashtable<String, List<File>>();
-		for (String list : listGen.keySet()) {
-			List<File> toCompare = new ArrayList<File>();
-			for (File f : listGen.get(list)) {
-				for (ScenarAnalyse sA : scenarCollec) {
-					if (sA.getProjFile().equals(f)) {
-						toCompare.add(sA.getSimuFile(list));
+	public List<List<ScenarAnalyse>> getProjetBySeuil() throws FileNotFoundException {
+		List<List<ProjetAnalyse>> listGen = new ArrayList<List<ProjetAnalyse>>();
+		for (String cellMin : cellMinCollec)
+			for (String grid : gridCollec) {
+				for (String data : dataCollec) {
+					List<ProjetAnalyse> particularList = new ArrayList<ProjetAnalyse>();
+					for (ProjetAnalyse pa : projetCollec) {
+						if (pa.getSizeCell().equals(cellMin) && pa.getData().equals(data) && pa.getGrid().equals(grid)) {
+							particularList.add(pa);
+						}
 					}
+					listGen.add(particularList);
 				}
 			}
-			listProj.put(list, toCompare);
+		return getScenars(listGen);
+	}
+
+	public List<List<ScenarAnalyse>> getProjetByGrid() throws FileNotFoundException {
+		List<List<ProjetAnalyse>> listGen = new ArrayList<List<ProjetAnalyse>>();
+		for (String cellMin : cellMinCollec)
+			for (String seuil : seuilCollec) {
+				for (String data : dataCollec) {
+					List<ProjetAnalyse> particularList = new ArrayList<ProjetAnalyse>();
+					for (ProjetAnalyse pa : projetCollec) {
+						if (pa.getSizeCell().equals(cellMin) && pa.getData().equals(data) && pa.getSeuil().equals(seuil)) {
+							particularList.add(pa);
+						}
+					}
+					listGen.add(particularList);
+				}
+			}
+		return getScenars(listGen);
+	}
+	
+	
+	public List<List<ProjetAnalyse>> getProjetByCellmin() {
+		List<List<ProjetAnalyse>> listGen = new ArrayList<List<ProjetAnalyse>>();
+		for (String seuil : seuilCollec) {
+			for (String grid : gridCollec) {
+				for (String data : dataCollec) {
+					List<ProjetAnalyse> particularList = new ArrayList<ProjetAnalyse>();
+					for (ProjetAnalyse pa : projetCollec) {
+						if (pa.getSeuil().equals(seuil) && pa.getData().equals(data) && pa.getGrid().equals(grid)) {
+							particularList.add(pa);
+						}
+					}
+					listGen.add(particularList);
+				}
+			}
 		}
-		return listProj;
+		return listGen;
 	}
 
 	public List<List<ScenarAnalyse>> getScenarPerProject() {
@@ -185,44 +192,57 @@ public class Analyse {
 		return result;
 	}
 
-	// public List<List<File>> getScenarDiffSeed() {
-	// List<List<File>> scenPerProj = getScenarPerProject();
-	// List<List<File>> result = new ArrayList<>();
-	// for (List<File> scenProj : scenPerProj) {
-	// List<File> sortedList = new ArrayList<File>();
-	//
-	//
-	// for (String yag : yagCollec) {
-	// for (String n : nMaxCollec){
-	// for (String ahp : ahpCollec){
-	// for (String str : strictCollec){
-	// for (File scenarFile : scenProj) {
-	// Pattern tiret = Pattern.compile("_");
-	// String[] decomp = tiret.split(scenarFile.getName());
-	// if (decomp[0].equals(n) && decomp[1].equals(str) && decomp[2].equals(yag) && decomp[3].equals(ahp)) {
-	// for (File ff : scenarFile.listFiles()) {
-	// if (ff.getName().endsWith("eval_anal-" + sA.getSizeCell() + ".0.tif")) {
-	// sortedList.add(ff);
-	// }
-	// }
-	// }
-	// }
-	// }
-	//
-	// }
-	//
-	// }
-	// result.add(sortedList);
-	// }
-	//
-	// return result;
-	// }
+	/**
+	 * Méthode qui retourne les ScenarAnalyses classées selon les scénarios, pour tout types de projets
+	 * 
+	 * @return
+	 * @throws FileNotFoundException
+	 */
+	public List<List<ScenarAnalyse>> getScenars() throws FileNotFoundException {
+		List<List<ProjetAnalyse>> uniList = new ArrayList<List<ProjetAnalyse>>();
+		uniList.add(projetCollec);
+		return getScenars(uniList);
+	}
+
+	/**
+	 * Méthode qui retourne les ScenarAnalyses classées selon les scénarios, pour une liste de projets donnée
+	 * 
+	 * @return
+	 * @throws FileNotFoundException
+	 */
+	public List<List<ScenarAnalyse>> getScenars(List<List<ProjetAnalyse>> listProjets) throws FileNotFoundException {
+
+		List<List<ScenarAnalyse>> listScenars = new ArrayList<List<ScenarAnalyse>>();
+
+		for (List<ProjetAnalyse> listProjet : listProjets) {
+			Hashtable<String, List<ScenarAnalyse>> collec = new Hashtable<String, List<ScenarAnalyse>>();
+			for (ProjetAnalyse pA : listProjet) {
+				for (ScenarAnalyse scenar : scenarCollec) {
+					if (scenar.getProjFile().equals(pA.getProjFile())) {
+						if (collec.containsKey(scenar.getFolderName().getName())) {
+							List<ScenarAnalyse> listTemp = collec.get(scenar.getFolderName().getName());
+							listTemp.add(scenar);
+							collec.put(scenar.getFolderName().getName(), listTemp);
+						} else {
+							List<ScenarAnalyse> resultTemp = new ArrayList<ScenarAnalyse>();
+							resultTemp.add(scenar);
+							collec.put(scenar.getFolderName().getName(), resultTemp);
+						}
+					}
+				}
+			}
+			for (List<ScenarAnalyse> lists : collec.values()) {
+				listScenars.add(lists);
+			}
+		}
+		return listScenars;
+
+	}
 
 	public List<List<ScenarAnalyse>> getScenarDiffSeed() throws FileNotFoundException {
 		List<List<ScenarAnalyse>> scenPerProj = getScenarPerProject();
 		List<List<ScenarAnalyse>> result = new ArrayList<>();
 		for (List<ScenarAnalyse> scenProj : scenPerProj) {
-		
 			for (String yag : yagCollec) {
 				for (String n : nMaxCollec) {
 					for (String ahp : ahpCollec) {
@@ -235,13 +255,9 @@ public class Analyse {
 							}
 							result.add(sortedList);
 						}
-				
 					}
-
 				}
-
 			}
-			
 		}
 		return result;
 	}

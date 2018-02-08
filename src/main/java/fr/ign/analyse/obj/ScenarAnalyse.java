@@ -44,11 +44,18 @@ public class ScenarAnalyse extends ProjetAnalyse {
 	public File getFolderName() {
 		return folderName;
 	}
+	
+	public String getScenarName(){
+		return folderName.getName();
+	}
 
 	public String getSeed() {
 		return seed;
 	}
 
+	public File getSimuFile() throws FileNotFoundException {
+		return getSimuFile("eval-anal", sizeCell);
+	}
 	public File getSimuFile(String echelle) throws FileNotFoundException {
 		return getSimuFile("eval-anal", echelle);
 	}

@@ -37,19 +37,13 @@ public class StatTab {
 		FileWriter writer = new FileWriter(fileName, addAfter);
 		if (firstLine == true) {
 			writer.append("scenario,");
-			if (RasterAnalyse.discrete == true) {
-				writer.append("tissus,");
-			}
+
 			for (String title : firstCol) {
 				writer.append(title + ",");
 			}
 			writer.append("\n");
 		}
-		writer.append(nameSc + ",");
-		if (RasterAnalyse.discrete == true) {
-			writer.append(tissus + ",");
-		}
-		
+		writer.append(nameSc + ",");		
 		for (double val : stats) {
 			writer.append(val + ",");
 		}

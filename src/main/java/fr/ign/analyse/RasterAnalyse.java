@@ -27,6 +27,7 @@ import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.DefaultFeatureCollection;
+import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.gce.geotiff.GeoTiffReader;
@@ -50,6 +51,8 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 
+import fr.ign.analyse.obj.ScenarAnalyse;
+
 public class RasterAnalyse {
 
 	/**
@@ -63,16 +66,10 @@ public class RasterAnalyse {
 
 	public static File rootFile;
 	public static File statFile;
-	public static File discreteFile;
-	public static File morphoFile;
-	public static boolean discrete = false;
 	public static boolean stabilite = false;
-	public static boolean sensibility = false;
 	public static boolean cutBorder = false;
 	public static String echelle;
 	public static boolean firstline = true;
-	public static boolean compareAHP = false;
-	public static boolean compareBaSt = false;
 	public static File evalTotale;
 
 	/**
@@ -110,187 +107,10 @@ public class RasterAnalyse {
 		return listFile;
 	}
 
-	// /**
-	// * method which analyse the small replication of a lot of parameters described into the experimental tests about the sensibility of MUP-City All the arguments are taken in
-	// the
-	// * class variable it creates a tab sheet on the /stats folder from the rootFile and merged rasters
-	// *
-	// * @author Maxime Colomb
-	// * @throws Exception
-	// *
-	// */
-	// public static void replication() throws Exception {
-	// for (int n = 3; n <= 7; n++) {
-	// String N = new String("N" + n);
-	// for (int s = 0; s <= 1; s++) {
-	// String strict = "St";// part of the folder's name
-	// if (s == 1) {
-	// strict = "Ba";
-	// }
-	// for (int ah = 0; ah <= 2; ah++) {
-	// String ahp = "ahpS";// part of the folder's name
-	// if (ah == 1) {
-	// ahp = "ahpE";
-	// } else if (ah == 2) {
-	// ahp = "ahpT";
-	// }
-	// for (int rer = 0; rer <= 1; rer++) {
-	// String aggreg = "Moy";
-	// if (rer == 1) {
-	// aggreg = "Yag";
-	// }
-	// String eachTest = new String(N + "--" + strict + "--" + ahp + "_" + aggreg);
-	// ArrayList<File> listRepliFile = selectWith(eachTest, null);
-	// System.out.println("pour le scenario " + eachTest);
-	// mergeRasters(listRepliFile, eachTest);
-	// }
-	// }
-	// }
-	// }
-	// }
-	//
-	// // test de réplications discrètisé
-	// public static void replicationCompareScale() throws Exception {
-	//
-	// discrete = true;
-	// rootFile = new File(rootFile, "tests_param/results/G0");
-	//
-	// ArrayList<String> echelles = new ArrayList<String>();
-	// for (Integer i = 20; i <= 180; i = i * 3) {
-	// String nombre = i.toString();
-	// echelles.add(nombre);
-	// }
-	//
-	// for (int n = 3; n <= 7; n++) {
-	// String N = new String("N" + n);
-	// for (int s = 0; s <= 1; s++) {
-	// String strict = "St";// part of the folder's name
-	// if (s == 1) {
-	// strict = "Ba";
-	// }
-	// for (int ah = 0; ah <= 2; ah++) {
-	// String ahp = "ahpS";// part of the folder's name
-	// if (ah == 1) {
-	// ahp = "ahpE";
-	// } else if (ah == 2) {
-	// ahp = "ahpT";
-	// }
-	// String aggreg = "Moy";
-	//
-	// String eachTest = new String(N + "--" + strict + "--" + ahp + "_" + aggreg);
-	// System.out.println("pour le scenario " + eachTest);
-	// for (String ech : echelles) {
-	// echelle = ech;
-	// ArrayList<File> listRepliFile = selectWith(eachTest, null);
-	// System.out.println("pour une echelle: " + ech);
-	// System.out.println(listRepliFile);
-	// mergeRasters(listRepliFile, eachTest);
-	// }
-	// firstline = false;
-	// }
-	// }
-	// }
-	// }
-	//
-	// /**
-	// * method which analyse the stability of a big amount of replication of simulation Directly create a statistic file
-	// *
-	// * @param echelle:
-	// * scale of the file
-	// * @param isDiscrete
-	// * if the process has to discretise the output cells within a shape file
-	// * @return a collection of a scenario name with his analysis array (described in the margeRaster method)
-	// * @throws Exception
-	// */
-	// public static void replicationStab() throws Exception {
-	//
-	// ArrayList<File> listRepliFiles = selectWith("replication", null);
-	// stabilite = true;
-	// mergeRasters(listRepliFiles, "stability");
-	// }
-	//
-	// /**
-	// * Compares replication by the AHP matrix choice
-	// *
-	// * @param echelle:
-	// * scale of the file
-	// * @return a collection of a scenario name with his analysis array (described in the margeRaster method)
-	// * @throws Exception
-	// */
-	//
-	// public static void compareAHP() throws Exception {
-	// compareAHP = true;
-	// ArrayList<File> oneSeed = selectWith("replication_7", null);
-	// for (int n = 3; n <= 7; n++) {
-	// String N = new String("N" + n);
-	// for (int s = 0; s <= 1; s++) {
-	// String strict = "St";// part of the folder's name
-	// if (s == 1) {
-	// strict = "Ba";
-	// }
-	// for (int agg = 0; agg <= 1; agg++) {
-	// String aggreg = "Yag";
-	// if (agg == 1) {
-	// aggreg = "Moy";
-	// }
-	// String TestNSt = new String(N + "--" + strict);
-	// ArrayList<File> tempList = selectWith(TestNSt, oneSeed);
-	// ArrayList<File> oneSeedAhp = selectWith(aggreg, tempList);
-	// System.out.println("one seed ahp : " + oneSeedAhp);
-	// String nameScenar = new String(TestNSt + "--" + aggreg);
-	// mergeRasters(oneSeedAhp, nameScenar);
-	//
-	// }
-	// }
-	// }
-	// }
-
-	// public static void compareBaSt() throws Exception {
-	//
-	// ArrayList<String> echelles = new ArrayList<String>();
-	//
-	// for (Integer i = 20; i <= 180; i = i * 3) {
-	// String nombre = i.toString();
-	// echelles.add(nombre);
-	// }
-	// for (String scale : echelles) {
-	// echelle = scale;
-	// compareBaSt = true;
-	// System.out.println("echelle " + echelle);
-	// ArrayList<File> oneSeed = selectWith("replication_7", null);
-	// System.out.println(oneSeed);
-	// for (int n = 3; n <= 7; n++) {
-	// String N = new String("N" + n);
-	// for (int ah = 0; ah <= 2; ah++) {
-	// String ahp = "ahpS";// part of the folder's name
-	// if (ah == 1) {
-	// ahp = "ahpE";
-	// } else if (ah == 2) {
-	// ahp = "ahpT";
-	// }
-	// for (int agg = 0; agg <= 1; agg++) {
-	// String aggreg = "Yag";
-	// if (agg == 1) {
-	// aggreg = "Moy";
-	// }
-	// String aggregahp = new String(ahp + "_" + aggreg);
-	// ArrayList<File> tempList = selectWith(N, oneSeed);
-	// System.out.println(tempList);
-	// ArrayList<File> oneSeedSt = selectWith(aggregahp, tempList);
-	// System.out.println("one seed st : " + oneSeedSt);
-	// String nameScenar = new String(N + "--" + aggregahp);
-	// mergeRasters(oneSeedSt, nameScenar);
-	//
-	// }
-	// }
-	// }
-	// }
-	// }
-
 	/**
 	 * Count how many cells of 20m are included in cells of 180m
 	 * 
-	 * @author Maxime Colomb
+	 * @author Maxime "proud" Colomb
 	 * @param cellRepetCentroid:
 	 * @param echelle:
 	 *            scale of the file
@@ -379,59 +199,19 @@ public class RasterAnalyse {
 
 	}
 
-	// /**
-	// * explo method to analyse an output when the data have been moved a little in order to impact the sensibility of the simulation to the grid.
-	// *
-	// * @param echelle
-	// * : scale in which the analyse should take place
-	// * @param nbTest
-	// * : Number of different simulation runned for the sensibility test
-	// * @return void, but creates a statistic file
-	// * @throws Exception
-	// */
-	// public static void gridSensibility() throws Exception {
-	// ArrayList<File> listRepliFile = new ArrayList<File>();
-	//
-	// cutBorder = true;
-	//
-	// for (int i = 0; i <= 8; i++) {
-	// File file = new File(rootFile + "/data" + i + "/replication_numero-42-eval_anal-" + echelle + ".0.tif");
-	// listRepliFile.add(file);
-	// }
-	// mergeRasters(listRepliFile, "gridSensibility");
-	// discrete = true;
-	// for (int i = 0; i <= 8; i++) {
-	// ArrayList<File> singleCity = new ArrayList<File>();
-	// File file = new File(rootFile + "/data" + i + "/replication_numero-42-eval_anal-" + echelle + ".0.tif");
-	// singleCity.add(file);
-	// mergeRasters(singleCity, "cityGen" + i);
-	// listRepliFile = new ArrayList<File>();
-	// }
-	// }
-	//
-	// /**
-	// * method to analyse an output when the grid have had a move
-	// *
-	// * @param echelle
-	// * : scale in which the analyse should take place
-	// * @param nbTest
-	// * : Number of different simulation runned for the sensibility test
-	// * @return void, but creates a statistic file
-	// * @throws Exception
-	// */
-	// public static void gridChange() throws Exception {
-	//
-	// ArrayList<File> listRepliGen = new ArrayList<File>();
-	// for (int i = 0; i <= 8; i++) {
-	// ArrayList<File> listEachCity = new ArrayList<File>();
-	// File file = new File(rootFile + "/G" + i + "/replication_numero-42-eval_anal-" + echelle + ".0.tif");
-	// listEachCity.add(file);
-	// mergeRasters(listEachCity, "cityGen" + i);
-	// }
-	// // mergeRasters(listRepliGen, "gridCompare");
-	//
-	// }
-
+	/**
+	 * Vectorize a MUP-City output
+	 * 
+	 * @param coverage
+	 *            : raster file of the MUP-City Output
+	 * @param cellSize
+	 *            : resolution of the cells
+	 * @return : A collection of vectorized cells
+	 * @throws IOException
+	 * @throws NoSuchAuthorityCodeException
+	 * @throws FactoryException
+	 * @throws ParseException
+	 */
 	public static SimpleFeatureCollection createMupOutput(GridCoverage2D coverage, int cellSize)
 			throws IOException, NoSuchAuthorityCodeException, FactoryException, ParseException {
 
@@ -469,7 +249,7 @@ public class RasterAnalyse {
 				victory.add(feature);
 			}
 		}
-		exportSFC(victory.collection(), new File("home/mcolomb/outMupEx.tif"));
+		// exportSFC(victory.collection(), new File("home/mcolomb/tmp/outMupEx.shp"));
 		return victory.collection();
 	}
 
@@ -515,141 +295,100 @@ public class RasterAnalyse {
 		return fileName;
 	}
 
-	public static File compareDiffSizedCell(List<File> listRepliFile, String nameScenar, File discreteFile, File morphoFile, int echelle) throws Exception {
+	/**
+	 * Write how much surface are included into each cities
+	 * 
+	 * @param listfile
+	 * @param nameScenar
+	 * @param discreteFile
+	 *            : the file to make the discretization. Must contain a "NOM_COM" field
+	 * @return
+	 * @throws Exception
+	 */
+	public static void compareDiffSizedCell(List<ScenarAnalyse> listfile, String name, File discreteFile) throws Exception {
 
 		// with the other parameters
-
-		mergeRasters(listRepliFile);
-		File rasterFile = new File(rootFile + "/Raster");
-
 		// with the topological spaces
-		// SimpleFeatureCollection city = (new ShapefileDataStore(discreteFile.toURI().toURL())).getFeatureSource().getFeatures();
-		// SimpleFeatureCollection morpho = (new ShapefileDataStore(discreteFile.toURI().toURL())).getFeatureSource().getFeatures();
-		//
-		// for (File f : listRepliFile) {
-		// Pattern tiret = Pattern.compile("-");
-		// String[] decompNameProj = tiret.split(f.getName());
-		// System.out.println(decompNameProj);
-		//
-		// int sizeCell = 0;
-		// Hashtable<String, Hashtable<DirectPosition2D, Float>> couple = new Hashtable<String, Hashtable<DirectPosition2D, Float>>();
-		// Hashtable<DirectPosition2D, Float> cellEval = new Hashtable<DirectPosition2D, Float>();
-		// Hashtable<DirectPosition2D, Float> cellRepet = new Hashtable<DirectPosition2D, Float>();
-		//
-		// ParameterValue<OverviewPolicy> policy = AbstractGridFormat.OVERVIEW_POLICY.createValue();
-		// policy.setValue(OverviewPolicy.IGNORE);
-		// ParameterValue<String> gridsize = AbstractGridFormat.SUGGESTED_TILE_SIZE.createValue();
-		// ParameterValue<Boolean> useJaiRead = AbstractGridFormat.USE_JAI_IMAGEREAD.createValue();
-		// useJaiRead.setValue(false);
-		// GeneralParameterValue[] params = new GeneralParameterValue[] { policy, gridsize, useJaiRead };
-		// GridCoverage2DReader reader = new GeoTiffReader(f);
-		// GridCoverage2D coverage = reader.read(params);
-		//
-		// SimpleFeatureSource out = createMupOutput(coverage, new File(f.getParentFile(), "tempFile.shp"), sizeCell);
-		//
-		// }
+		Hashtable<String, String[]> tabDifferentObjects = loopDiffEntities();
 
-		return null;
+		for (String[] differentObject : tabDifferentObjects.values()) {
+
+			SimpleFeatureCollection discrete = (new ShapefileDataStore(discreteFile.toURI().toURL())).getFeatureSource().getFeatures();
+			Hashtable<String, double[]> result = new Hashtable<>();
+			String[] firstCol = new String[listfile.size() * 2 + 1];
+			firstCol[0] = differentObject[0];
+			int scenar = 1;
+
+			// instanciation of the different entities in the result
+			for (Object obj : discrete.toArray()) {
+				String city = (String) ((SimpleFeature) obj).getAttribute(differentObject[1]);
+				result.put(city, new double[0]);
+			}
+			for (ScenarAnalyse sA : listfile) {
+
+				echelle = sA.getSizeCell();
+				firstCol[scenar] = "echelle - " + echelle;
+				scenar = scenar + 2;
+				int size = Integer.valueOf(echelle);
+
+				SimpleFeatureCollection output = createMupOutput(importRaster(sA.getSimuFile(echelle)), size);
+				Hashtable<String, Double> entitySurf = new Hashtable<String, Double>();
+				Hashtable<String, Double> entityNumber = new Hashtable<String, Double>();
+				for (Object obj : discrete.toArray()) {
+					SimpleFeature city = (SimpleFeature) obj;
+					String entityName = (String) city.getAttribute(differentObject[1]);
+					for (Object objet : output.toArray()) {
+						SimpleFeature cell = (SimpleFeature) objet;
+						if (((Geometry) city.getDefaultGeometry()).intersects((Geometry) cell.getDefaultGeometry())) {
+							double surf = ((Geometry) city.getDefaultGeometry()).intersection((Geometry) cell.getDefaultGeometry()).getArea();
+							if (entitySurf.containsKey(entityName)) {
+								double temp = entitySurf.get(entityName) + surf;
+								entitySurf.remove(entityName);
+								entitySurf.put(entityName, temp);
+
+								double tempNb = entityNumber.get(entityName) + 1;
+								entityNumber.remove(entityName);
+								entityNumber.put(entityName, tempNb);
+
+							} else {
+								entitySurf.put(entityName, surf);
+								entityNumber.put(entityName, (double) 1);
+							}
+						}
+					}
+				}
+
+				// put the values into the right case
+				for (String entity : result.keySet()) {
+					double[] temp = result.get(entity);
+					double[] toPut = new double[temp.length + 2];
+					// ça recopie
+					if (temp.length > 0) {
+						for (int i = 0; i < temp.length; i++) {
+							toPut[i] = temp[i];
+						}
+					}
+					if (entitySurf.containsKey(entity)) {
+						toPut[temp.length] = entitySurf.get(entity);
+						toPut[temp.length + 1] = entityNumber.get(entity);
+					} else {
+						toPut[temp.length] = 0;
+						toPut[temp.length + 1] = 0;
+					}
+					result.put(entity, toPut);
+				}
+			}
+			generateCsvFile(result, statFile, name + "-surfaceOfCells" + "-" + differentObject[0], firstCol);
+		}
 	}
 
-	// /**
-	// * mergeRaster Merge the given Array of Files regarding to a grid. Return a list with different objects
-	// *
-	// * @param listRepliFile
-	// * : ArrayList of File pointing to the raster layer to merge
-	// * @param nameScenar
-	// * : the given name for scenarios
-	// * @return List of object defined as : list[0] = Hashtable<GridCoordinates2D, Integer> Replication of the cells list[1] = Hashtable<GridCoordinates2D, Float> Meaned
-	// evaluation
-	// * of the cells list[2] = DescriptiveStatistic historical statistic file list[3] = tab of the maximum different cells of the simulation
-	// * @throws Exception
-	// */
-	// public static RasterMergeResult mergeRastersSimple(List<File> listRepliFile) throws Exception {
-	//
-	// // variables to create statistics
-	//
-	// DescriptiveStatistics statNb = new DescriptiveStatistics();
-	// Hashtable<GridCoordinates2D, Integer> cellRepet = new Hashtable<GridCoordinates2D, Integer>();
-	// Hashtable<GridCoordinates2D, ArrayList<Float>> cellEval = new Hashtable<GridCoordinates2D, ArrayList<Float>>();
-	//
-	// int nbDeScenar = 0; // le nombre total de scénarios analysés dans la fonction
-	//
-	// double[] histo = new double[listRepliFile.size()];
-	// int iter = 0;
-	//
-	// // variables for merged raster
-	// // not cool coz i cannot know the number of column and lines of the enveloppe yet and the type need it
-	// // change the type to a collection or an arraylist?
-	//
-	// Envelope2D env = null;
-	//
-	// // loop on the different cells
-	// for (File f : listRepliFile) {
-	// ParameterValue<OverviewPolicy> policy = AbstractGridFormat.OVERVIEW_POLICY.createValue();
-	// policy.setValue(OverviewPolicy.IGNORE);
-	// ParameterValue<String> gridsize = AbstractGridFormat.SUGGESTED_TILE_SIZE.createValue();
-	// ParameterValue<Boolean> useJaiRead = AbstractGridFormat.USE_JAI_IMAGEREAD.createValue();
-	// useJaiRead.setValue(false);
-	// GeneralParameterValue[] params = new GeneralParameterValue[] { policy, gridsize, useJaiRead };
-	//
-	// GridCoverage2DReader reader = new GeoTiffReader(f);
-	// GridCoverage2D coverage = reader.read(params);
-	// GridEnvelope dimensions = reader.getOriginalGridRange();
-	// GridCoordinates maxDimensions = dimensions.getHigh();
-	//
-	// int w = maxDimensions.getCoordinateValue(0) + 1;
-	// int h = maxDimensions.getCoordinateValue(1) + 1;
-	// int numBands = reader.getGridCoverageCount();
-	// double[] vals = new double[numBands];
-	// if (env == null) {
-	// env = coverage.getEnvelope2D();
-	// }
-	//
-	// int compteurNombre = 0;
-	// nbDeScenar = nbDeScenar + 1;
-	//
-	// // beginning of the all cells loop
-	// int debI = 0;
-	// int debJ = 0;
-	//
-	// // analyse normale de la réplication des cellules
-	// for (int i = debI; i < w; i++) {
-	// for (int j = debJ; j < h; j++) {
-	// GridCoordinates2D coord = new GridCoordinates2D(i, j);
-	// if (coverage.evaluate(coord, vals)[0] > 0) {
-	// compteurNombre = compteurNombre + 1;
-	// if (cellRepet.containsKey(coord)) { // si la cellule a déja été sélectionné lors de réplications
-	// cellRepet.put(coord, cellRepet.get(coord) + 1);
-	// ArrayList<Float> temp = cellEval.get(coord); // on mets les valeurs d'évaluation dans un tableau
-	// temp.add((float) coverage.evaluate(coord, vals)[0]);
-	// cellEval.put(coord, temp);
-	// } else {// si la cellule est sélectionné pour la première fois
-	// cellRepet.put(coord, 1);
-	// ArrayList<Float> firstList = new ArrayList<Float>();
-	// firstList.add((float) coverage.evaluate(coord, vals)[0]);
-	// cellEval.put(coord, firstList);
-	// }
-	// }
-	// }
-	// }
-	//
-	// System.out.println("il y a " + cellRepet.size() + " cellules sur " + compteurNombre + " dans la réplication " + nbDeScenar);
-	//
-	// // Historique de l'évolution du nombre de cellules sélectionnées dans toutes les simulations
-	// statNb.addValue(compteurNombre);
-	// histo[iter] = (double) cellRepet.size();
-	// iter = iter + 1;
-	// }
-	//
-	// Hashtable<GridCoordinates2D, Float> cellEvalFinal = moyenneEvals(cellEval);
-	//
-	// RasterMergeResult result = new RasterMergeResult();
-	// result.setCellRepet(cellRepet);
-	// result.setCellEval(cellEvalFinal);
-	// result.setHistoDS(statNb);
-	// result.setHisto(histo);
-	// return result;
-	// }
+	public static RasterMergeResult mergeRasters(List<ScenarAnalyse> listSA, ScenarAnalyse justToOverload) throws Exception {
+		List<File> inList = new ArrayList<File>();
+		for (ScenarAnalyse sA : listSA) {
+			inList.add(sA.getSimuFile());
+		}
+		return mergeRasters(inList);
+	}
 
 	/**
 	 * mergeRaster Merge the given Array of Files regarding to a grid. Return a list with different objects The cells are taken in a general geographic environment
@@ -726,7 +465,6 @@ public class RasterAnalyse {
 				Ymax = Ymax - ecart;
 			}
 
-			// developpement pour les cas ou l'on veut une analyse discrétisée ou si les bordures doivent être coupées
 			for (double r = Xmin + Double.parseDouble(echelle) / 2; r <= Xmax; r = r + Double.parseDouble(echelle)) {
 				// those values are the bounds from project (and upped to correspond to a multiple of 180 to analyse all the cells in the project)
 				for (double t = Ymin + Double.parseDouble(echelle) / 2; t <= Ymax; t = t + Double.parseDouble(echelle)) {
@@ -768,6 +506,24 @@ public class RasterAnalyse {
 	}
 
 	/**
+	 * analyse different geographic objects, all presented in the "discret file"
+	 * 
+	 * @return String[] with 0 : the type of entity and 1 : the attribute name
+	 */
+	public static Hashtable<String, String[]> loopDiffEntities() {
+		Hashtable<String, String[]> tabDifferentObjects = new Hashtable<String, String[]>();
+		String[] differentObjects = { "UrbanFabric", "typo" };
+		tabDifferentObjects.put(differentObjects[0], differentObjects);
+		String[] differentObjects2 = { "Morphology", "morpholo" };
+		tabDifferentObjects.put(differentObjects2[0], differentObjects2);
+		String[] differentObjects3 = { "Cities", "NOM_COM" };
+		tabDifferentObjects.put(differentObjects3[0], differentObjects3);
+		String[] differentObjects4 = { "MorphoCities", "morphocity" };
+		tabDifferentObjects.put(differentObjects4[0], differentObjects4);
+		return tabDifferentObjects;
+	}
+
+	/**
 	 * create the statistics for a discretized study
 	 * 
 	 * @param nameScenar
@@ -779,88 +535,94 @@ public class RasterAnalyse {
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 */
-	public static File createStatsDescriptiveDiscrete(String nameScenar, RasterMergeResult result, File discreteFile) throws IOException {
+	public static File createStatsDiscrete(String nameScenar, RasterMergeResult result, File discreteFile) throws IOException {
 
-		// different objects to be analyzed
-		Hashtable<String, String[]> tabDifferentObjects = new Hashtable<String, String[]>();
-		String[] differentObjects = { "UrbanFabric", "typo" };
-		tabDifferentObjects.put(differentObjects[0], differentObjects);
-		String[] differentObjects2 = { "Morphology", "morpho" };
-		tabDifferentObjects.put(differentObjects2[0], differentObjects2);
-		String[] differentObjects3 = { "Cities", "NOM_COM" };
-		tabDifferentObjects.put(differentObjects3[0], differentObjects3);
-		String[] differentObjects4 = { "MorphoCities", "morphocity" };
-		tabDifferentObjects.put(differentObjects4[0], differentObjects4);
+		Hashtable<String, String[]> tabDifferentObjects = loopDiffEntities();
 
 		// loop on those different objects
 		for (String[] differentObject : tabDifferentObjects.values()) {
 
-			System.out.println("pour le sujet " + differentObject[0] + differentObject[1]);
-			SimpleFeatureCollection fabricType = (new ShapefileDataStore(discreteFile.toURI().toURL())).getFeatureSource().getFeatures();
-			GeometryFactory factory = new GeometryFactory();
-
-			SimpleFeatureIterator iteratorCity = fabricType.features();
-
+	
 			String[] nameLineFabric = new String[5];
-			nameLineFabric[0] = differentObject[0] + " name";
+			nameLineFabric[0] = differentObject[0] + " name - echelle " + echelle;
 			nameLineFabric[1] = "Total Cells";
 			nameLineFabric[2] = "Stable cells";
 			nameLineFabric[3] = "Unstable cells";
 			nameLineFabric[4] = "average evaluation";
 
-			Hashtable<String, Object[]> cellByFabric = new Hashtable<String, Object[]>();
+			Hashtable<String, double[]> cellByFabric = new Hashtable<String, double[]>();
+			Hashtable<String, List<Double>> evals = new Hashtable<String, List<Double>>();
+
+			System.out.println("pour le sujet " + differentObject[0]);
+			SimpleFeatureCollection fabricType = (new ShapefileDataStore(discreteFile.toURI().toURL())).getFeatureSource().getFeatures();
+			GeometryFactory factory = new GeometryFactory();
 
 			// pour toutes les villes
-			while (iteratorCity.hasNext()) {
-				SimpleFeature city = iteratorCity.next();
-				Object[] resultFabric = new Object[5];
+			// ce serait plus jolie mais ça me mets une erreure
+			// try (SimpleFeatureIterator iteratorCity = fabricType.features()) {
+			// while (iteratorCity.hasNext()) {
+			// SimpleFeature city = iteratorCity.next();
+			for (Object obj : fabricType.toArray()) {
+				SimpleFeature city = (SimpleFeature) obj;
+				double[] resultFabric = new double[4];
+
 				String fabricName = (String) city.getAttribute(differentObject[1]);
-				boolean notNull = false;
 				// pour toutes les cellules
 				for (DirectPosition2D coordCell : result.getCellRepet().keySet()) {
 					if (((Geometry) city.getDefaultGeometry()).covers(factory.createPoint(new Coordinate(coordCell.getX(), coordCell.getY())))) {
-						notNull = true;
 						// si le tissus a déja été implémenté
-						if (cellByFabric.contains(fabricName)) {
-							System.out.println("fils de pute");
-							Object[] resultFabricPast = cellByFabric.get(fabricName);
-							resultFabric[1] = (int) resultFabricPast[1] + 1;
+						if (cellByFabric.containsKey(fabricName)) {
+							double[] resultFabricPast = cellByFabric.get(fabricName);
+							resultFabric[0] = resultFabricPast[0] + 1;
 							// si la cellule est stable
 							if (result.getCellRepet().get(coordCell) == result.getNbScenar()) {
-								resultFabric[2] = (int) resultFabricPast[2] + 1;
-								resultFabric[3] = (int) resultFabricPast[3];
+								resultFabric[1] = resultFabricPast[1] + 1;
+								resultFabric[2] = resultFabricPast[2];
 							}
 							// ou non
 							else {
-								resultFabric[3] = (int) resultFabricPast[3] + 1;
-								resultFabric[2] = (int) resultFabricPast[2];
+								resultFabric[2] = resultFabricPast[2] + 1;
+								resultFabric[1] = resultFabricPast[1];
 							}
-							// moyenne des éval
-							resultFabric[4] = ((int) resultFabricPast[1] * (float) resultFabricPast[4] + result.getCellEval().get(coordCell)) / (int) resultFabric[1];
+							cellByFabric.put(fabricName, resultFabric);
 						}
-
 						// si le tissus n'as jamais été implémenté
 						else {
-							System.out.println("devrais passer par ici");
-							resultFabric[0] = fabricName;
+							resultFabric[0] = (double) 1;
 							// si la cellule est stable
 							if (result.getCellRepet().get(coordCell) == result.getNbScenar()) {
-								resultFabric[2] = 1;
+								resultFabric[1] = (double) 1;
+								resultFabric[2] = (double) 0;
 							}
 							// ou non
 							else {
-								resultFabric[3] = 1;
+								resultFabric[2] = (double) 1;
+								resultFabric[1] = (double) 0;
 							}
-							resultFabric[4] = result.getCellEval().get(coordCell);
+							List<Double> salut = new ArrayList<>();
+							if (evals.contains(fabricName)) {
+								salut = evals.get(fabricName);
+							}
+							salut.add((double) result.getCellEval().get(coordCell));
+							evals.put(fabricName, salut);
+
+							cellByFabric.put(fabricName, resultFabric);
 						}
 					}
 				}
-				// si une cellule a été trouvé dans l'entitée
-				if (notNull) {
-					cellByFabric.put((String) resultFabric[0], resultFabric);
-				}
 			}
-			generateCsvFile(cellByFabric, statFile, ("cellBy" + differentObject[0] + "For-" + nameScenar));
+			// put the evals in
+			for (String fabricName : evals.keySet()) {
+				double sum = 0;
+				for (double db : evals.get(fabricName)) {
+					sum = sum + db;
+				}
+				double[] finalle = cellByFabric.get(fabricName);
+				finalle[3] = sum / evals.size();
+				cellByFabric.put(fabricName, finalle);
+			}
+
+			generateCsvFile(cellByFabric, statFile, ("cellBy" + differentObject[0] + "For-" + nameScenar), nameLineFabric);
 		}
 		return statFile;
 	}
@@ -875,7 +637,7 @@ public class RasterAnalyse {
 
 		Hashtable<String, double[]> enForme = new Hashtable<String, double[]>();
 		enForme.put("histo", histo);
-		generateCsvFileCol(enForme, statFile, "selected_cells_all_simu-"+echelle);
+		generateCsvFileCol(enForme, statFile, "selected_cells_all_simu-" + echelle);
 	}
 
 	/**
@@ -921,10 +683,13 @@ public class RasterAnalyse {
 		return cellEvalFinal;
 	}
 
-	public static File createStatsDescriptive(String nameScenar, Hashtable<DirectPosition2D, Integer> cellRepet, Hashtable<DirectPosition2D, Float> cellEval,
-			DescriptiveStatistics statNb) throws IOException {
+	public static File createStatsDescriptive(String nameScenar, RasterMergeResult result) throws IOException {
 
 		statFile.mkdirs();
+
+		Hashtable<DirectPosition2D, Integer> cellRepet = result.getCellRepet();
+		Hashtable<DirectPosition2D, Float> cellEval = result.getCellEval();
+		DescriptiveStatistics statNb = result.getHistoDS();
 
 		double[] tableauFinal = new double[22];
 		String[] premiereCol = new String[22];
@@ -1025,13 +790,6 @@ public class RasterAnalyse {
 					tableauFinal[13]++;
 					break;
 				}
-				if (cellRepet.get(key) < 10 && compareBaSt == false) {
-					statInstable.addValue(cellEval.get(key));
-				}
-
-				if (cellRepet.get(key) == 10 && compareBaSt == false) {
-					statStable.addValue(cellEval.get(key));
-				}
 			}
 			tableauFinal[15] = statInstable.getMean();
 			tableauFinal[16] = statInstable.getStandardDeviation();
@@ -1122,11 +880,12 @@ public class RasterAnalyse {
 		Hashtable<String, double[]> result = new Hashtable<String, double[]>();
 		for (Object[] ligne : cellRepet.values()) {
 			double[] aMettre = new double[ligne.length - 1];
-			for (int i = 1; i <= ligne.length; i++) {
-				aMettre[i] = (double) ligne[i - 1];
+			for (int i = 1; i < ligne.length; i = i + 1) {
+				aMettre[i - 1] = (double) ligne[i];
 			}
-			result.put((String) ligne[0], aMettre);
+			result.put(String.valueOf(ligne[0]), aMettre);
 		}
+		generateCsvFileCol(result, file, name);
 	}
 
 	public static void generateCsvFile(Hashtable<String, double[]> cellRepet, File file, String name, String[] premiereColonne) throws IOException {
