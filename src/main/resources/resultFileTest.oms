@@ -1,0 +1,19 @@
+val resultFile = Val[File]
+val resultFolder = Val[File]
+val folderIn =Val[File]
+val name = Val[String]
+
+val ResultTask = ScalaTask("""
+|import fr.ign.task._
+|val resultFile=withThreadClassLoader(classLoader(fracgis-openMole-0.0.1-SNAPSHOT-shaded.runStab))(fracgis-openMole-0.0.1-SNAPSHOT-shaded.runStab.apply(resultFolder, folderIn, name))""".stripMargin) set (
+  libraries += workDirectory / "fracgis-openMole-0.0.1-SNAPSHOT-shaded.jar",
+  resultFolder := workDirectory / "resultResultTest",
+  folderIn := workDirectory / "data/dataAutom",
+  name := "emprise",
+  inputs += (resultFolder, folderIn,name),
+  outputs += (resultFile)
+)
+
+val env = LocalEnvironment(4)
+
+ResultTask on env

@@ -24,16 +24,16 @@ import fr.ign.exp.DataSetSelec;
 public class RasterAnalyseTask {
 
 	// public static String echelle;
-	
-	public static void main(String[] args) throws Exception {
-//		File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/gridExploProjets2");
-//		runGridSens(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"), "gridExplo");
-		
-		 File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/emprise");
-		 System.out.println(runStab(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/")));
 
-//		 File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/compDonnee");
-//		 runCompData(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"));
+	public static void main(String[] args) throws Exception {
+		// File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/gridExploProjets2");
+		// runGridSens(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"), "gridExplo");
+
+		File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/emprise");
+		System.out.println(runStab(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"),"emprise"));
+
+		// File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/compDonnee");
+		// runCompData(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"));
 	}
 
 	public static File runGridSens(File file, File fileDonnee, String name) throws Exception {
@@ -114,7 +114,7 @@ public class RasterAnalyseTask {
 
 			RasterMergeResult resultMergedSeuil = RasterAnalyse.mergeRasters(listGrid, listGrid.get(0));
 			RasterAnalyse.createStatsDescriptive(name + ("GridComparison"), resultMergedSeuil);
-	//		RasterAnalyse.createStatsDiscrete(name + ("GridComparisonDiscrete"), resultMergedSeuil, discreteFile);
+			// RasterAnalyse.createStatsDiscrete(name + ("GridComparisonDiscrete"), resultMergedSeuil, discreteFile);
 			rastFile.mkdirs();
 			RasterMerge.merge(listGrid,
 					new File(rastFile,
@@ -127,11 +127,10 @@ public class RasterAnalyseTask {
 		return batiFile;
 	}
 
-	public static File runStab(File file, File fileDonnee) throws Exception {
+	public static File runStab(File file, File fileDonnee, String name) throws Exception {
 		File[] fileAnalyse = DataSetSelec.selectFileAnalyse(fileDonnee);
 		File discreteFile = fileAnalyse[0];
 		File batiFile = fileAnalyse[1];
-		String name = file.getName();
 		return runStab(file, discreteFile, batiFile, name);
 	}
 
@@ -139,7 +138,7 @@ public class RasterAnalyseTask {
 
 		// folder settings
 		File resultFile = new File(file, "result--" + name);
-
+		resultFile.mkdir();
 		RasterAnalyse.rootFile = file;
 		RasterAnalyse.stabilite = true;
 
