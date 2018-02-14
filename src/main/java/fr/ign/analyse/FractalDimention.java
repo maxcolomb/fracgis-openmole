@@ -67,6 +67,21 @@ public class FractalDimention {
 		}
 		System.out.println(results);
 	}
+	public static void getCorrFracDimfromSimu(File batiFile, File[] files, File fileOut,String echelle, int resolution) throws IOException {
+		Hashtable<String, Hashtable<String, Double>> results = new Hashtable<String, Hashtable<String, Double>>();
+		for (File f : files) {
+			if (f.toString().contains("_Moy_ahpx_seed_42")) {
+				for (File ff : f.listFiles()) {
+					if (ff.toString().endsWith("_Moy_ahpx_seed_42-eval_anal-"+echelle+".0.tif")) {
+						String name = ff.getName().replaceAll("_Moy_ahpx_seed_42-eval_anal-"+echelle+".0.tif", "-"+echelle);
+						System.out.println("calculé pour " + name);
+						results = getCorrFracDim(batiFile, ff, fileOut, resolution, name);
+					}
+				}
+			}
+		}
+		System.out.println(results);
+	}
 
 	public static Hashtable<String, Hashtable<String, Double>> getCorrFracDim(File batiFile, File mupFile, File fileOut, int resolution, String name) throws IOException {
 		Hashtable<String, Hashtable<String, Double>> results = new Hashtable<String, Hashtable<String, Double>>();

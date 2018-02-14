@@ -422,7 +422,7 @@ public class RasterAnalyse {
 	}
 
 	public static RasterMergeResult mergeRasters(List<File> listRepliFile) throws Exception {
-
+System.out.println("merging " + listRepliFile.size() + " rasters");
 		// variables to create statistics
 
 		DescriptiveStatistics statNb = new DescriptiveStatistics();
@@ -442,7 +442,7 @@ public class RasterAnalyse {
 
 		// loop on the different cells
 		for (File f : listRepliFile) {
-
+System.out.println("import " + f);
 			GridCoverage2D coverage = importRaster(f);
 
 			if (env == null) {
