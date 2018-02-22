@@ -1,0 +1,24 @@
+val name = Val[String]
+val folderIn = Val[File]
+val projectFile = Val[File]
+val resultFile = Val[File]
+
+
+val ResultTask = ScalaTask("""
+|import fracgisplugin._
+|val resultFile = withThreadClassLoader(classLoader(AnalysisTask))(AnalysisTask.apply(projectFile, folderIn, name))""".stripMargin
+) set (
+  plugins += pluginsOf(fracgisplugin.AnalysisTask),
+//  libraries += workDirectory / "fracgis-openMole-0.0.1-SNAPSHOT-shaded.jar",
+  projectFile := workDirectory / "results",
+  folderIn := workDirectory / "data" / "stabilite" / "dataManuRien",
+  name := "Stability",
+  inputs += (projectFile, folderIn, name),
+  outputs += (resultFile, projectFile, name)
+)
+
+val copyHook =  CopyFileHook(resultFile, workDirectory / "results" / "analysis-${name}")
+
+val env = LocalEnvironment(4)
+
+(ResultTask on env hook copyHook)
