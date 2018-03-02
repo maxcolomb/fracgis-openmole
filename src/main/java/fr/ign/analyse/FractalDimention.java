@@ -2,14 +2,11 @@ package fr.ign.analyse;
 
 import java.awt.image.WritableRaster;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.net.MalformedURLException;
-import java.util.Hashtable;
 import java.util.HashSet;
+import java.util.Hashtable;
 
-import org.apache.batik.dom.util.HashTable;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridCoverageFactory;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
@@ -17,13 +14,13 @@ import org.geotools.coverage.grid.io.GridCoverage2DReader;
 import org.geotools.coverage.grid.io.OverviewPolicy;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.gce.geotiff.GeoTiffFormat;
 import org.geotools.gce.geotiff.GeoTiffReader;
 import org.geotools.gce.geotiff.GeoTiffWriteParams;
 import org.geotools.gce.geotiff.GeoTiffWriter;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.parameter.GeneralParameterValue;
 import org.opengis.parameter.ParameterValue;
 import org.opengis.parameter.ParameterValueGroup;
@@ -48,17 +45,17 @@ public class FractalDimention {
 		File fileOut = new File("/home/mcolomb/tmp/rasterGoode.tif");
 		File batiFile = new File("/home/mcolomb/donnee/couplage/donneeGeographiques/batiment.shp");
 		File rootFile = new File("/media/mcolomb/Data_2/resultExplo/dimFract/tmp/dimFract");
-//		getCorrFracDimfromSimu(batiFile, rootFile, fileOut, resolution);
-		getCorrFracDim(batiFile,new File("/home/mcolomb/tmp/simuVide.tif"), fileOut, resolution,"sansSimu");
+		// getCorrFracDimfromSimu(batiFile, rootFile, fileOut, resolution);
+		getCorrFracDim(batiFile, new File("/home/mcolomb/tmp/simuVide.tif"), fileOut, resolution, "sansSimu");
 	}
 
-	public static void getCorrFracDimfromSimu(File batiFile, File rootFile, File fileOut,String echelle, int resolution) throws IOException {
+	public static void getCorrFracDimfromSimu(File batiFile, File rootFile, File fileOut, String echelle, int resolution) throws IOException {
 		Hashtable<String, Hashtable<String, Double>> results = new Hashtable<String, Hashtable<String, Double>>();
 		for (File f : rootFile.listFiles()) {
 			if (f.toString().contains("_Moy_ahpx_seed_42")) {
 				for (File ff : f.listFiles()) {
-					if (ff.toString().endsWith("_Moy_ahpx_seed_42-eval_anal-"+echelle+".0.tif")) {
-						String name = ff.getName().replaceAll("_Moy_ahpx_seed_42-eval_anal-"+echelle+".0.tif", "-"+echelle);
+					if (ff.toString().endsWith("_Moy_ahpx_seed_42-eval_anal-" + echelle + ".0.tif")) {
+						String name = ff.getName().replaceAll("_Moy_ahpx_seed_42-eval_anal-" + echelle + ".0.tif", "-" + echelle);
 						System.out.println("calculé pour " + name);
 						results = getCorrFracDim(batiFile, ff, fileOut, resolution, name);
 					}
@@ -67,13 +64,14 @@ public class FractalDimention {
 		}
 		System.out.println(results);
 	}
-	public static void getCorrFracDimfromSimu(File batiFile, File[] files, File fileOut,String echelle, int resolution) throws IOException {
+
+	public static void getCorrFracDimfromSimu(File batiFile, File[] files, File fileOut, String echelle, int resolution) throws IOException {
 		Hashtable<String, Hashtable<String, Double>> results = new Hashtable<String, Hashtable<String, Double>>();
 		for (File f : files) {
 			if (f.toString().contains("_Moy_ahpx_seed_42")) {
 				for (File ff : f.listFiles()) {
-					if (ff.toString().endsWith("_Moy_ahpx_seed_42-eval_anal-"+echelle+".0.tif")) {
-						String name = ff.getName().replaceAll("_Moy_ahpx_seed_42-eval_anal-"+echelle+".0.tif", "-"+echelle);
+					if (ff.toString().endsWith("_Moy_ahpx_seed_42-eval_anal-" + echelle + ".0.tif")) {
+						String name = ff.getName().replaceAll("_Moy_ahpx_seed_42-eval_anal-" + echelle + ".0.tif", "-" + echelle);
 						System.out.println("calculé pour " + name);
 						results = getCorrFracDim(batiFile, ff, fileOut, resolution, name);
 					}
@@ -85,7 +83,7 @@ public class FractalDimention {
 
 	public static Hashtable<String, Hashtable<String, Double>> getCorrFracDim(File batiFile, File mupFile, File fileOut, int resolution, String name) throws IOException {
 		Hashtable<String, Hashtable<String, Double>> results = new Hashtable<String, Hashtable<String, Double>>();
-		results.put(name, calculFracCor(mergeBuildMUPResultRast(batiFile, mupFile, fileOut, resolution),fileOut));
+		results.put(name, calculFracCor(mergeBuildMUPResultRast(batiFile, mupFile, fileOut, resolution), fileOut));
 		RasterAnalyse.generateCsvFileMultTab(results, fileOut, "dimensionFractale");
 		return results;
 	}
@@ -101,7 +99,7 @@ public class FractalDimention {
 		double Xmin = gridBounds.getMinX();
 		double Ymin = gridBounds.getMinY();
 
-		File rasterBatiFile = rasterize(batiFile, new File(fileOut.getParentFile(),"temprast.tif"));
+		File rasterBatiFile = rasterize(batiFile, new File(fileOut.getParentFile(), "temprast.tif"));
 		GridCoverage2D rasterBati = importRaster(rasterBatiFile);
 
 		for (int i = 0; i < imagePixelData.length; ++i) {
@@ -163,15 +161,25 @@ public class FractalDimention {
 	public static File rasterize(File batiFile, File fileOut) throws MalformedURLException, IOException {
 		HashSet<Feature> batiCol = new HashSet<>();
 		if (!fileOut.exists()) {
-			SimpleFeatureCollection bati = (new ShapefileDataStore((batiFile).toURI().toURL())).getFeatureSource().getFeatures();
+			ShapefileDataStore batiDS = new ShapefileDataStore((batiFile).toURI().toURL());
+			SimpleFeatureCollection bati = batiDS.getFeatureSource().getFeatures();
+
 			CoordinateReferenceSystem sourceCRS = bati.getSchema().getCoordinateReferenceSystem();
 			// rasterisation avec les outils de théma
 			// create a thema collection
 			int h = 0;
-			for (Object obj : bati.toArray()) {
-				Feature f = new DefaultFeature((Object) h, (Geometry) ((SimpleFeature) obj).getDefaultGeometry());
-				h = h + 1;
-				batiCol.add(f);
+			SimpleFeatureIterator iteratorBati = bati.features();
+			try {
+				// Pour toutes les entitées
+				while (iteratorBati.hasNext()) {
+					Feature f = new DefaultFeature((Object) h, (Geometry) (iteratorBati.next()).getDefaultGeometry());
+					h = h + 1;
+					batiCol.add(f);
+				}
+			} catch (Exception problem) {
+				problem.printStackTrace();
+			} finally {
+				iteratorBati.close();
 			}
 
 			DefaultFeatureCoverage featCov = new DefaultFeatureCoverage(batiCol);
@@ -181,6 +189,7 @@ public class FractalDimention {
 					featCov.getEnvelope().getMaxY(), sourceCRS);
 			GridCoverage2D rasterBati = new GridCoverageFactory().create("bati", wRaster, envBati);
 			writeGeotiff(fileOut, rasterBati);
+			batiDS.dispose();
 		}
 		return fileOut;
 	}

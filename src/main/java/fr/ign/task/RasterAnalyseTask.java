@@ -1,15 +1,16 @@
 package fr.ign.task;
 
-import java.awt.image.Raster;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.ListIterator;
 
+import org.apache.commons.lang3.tuple.MutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.geotools.geometry.DirectPosition2D;
-import org.hsqldb.persist.RAShadowFile;
 
 import com.google.common.io.Files;
 
@@ -18,6 +19,7 @@ import fr.ign.analyse.RasterAnalyse;
 import fr.ign.analyse.RasterMerge;
 import fr.ign.analyse.RasterMergeResult;
 import fr.ign.analyse.obj.Analyse;
+import fr.ign.analyse.obj.ProjetAnalyse;
 import fr.ign.analyse.obj.ScenarAnalyse;
 import fr.ign.exp.DataSetSelec;
 
@@ -29,15 +31,15 @@ public class RasterAnalyseTask {
 		// File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/gridExploProjets2");
 		// runGridSens(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"), "gridExplo");
 
-		File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/emprise");
-		System.out.println(runStab(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"),"emprise"));
+		File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/compDonnee");
+		System.out.println(runStab(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"), "compDonnee"));
 
 		// File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/compDonnee");
 		// runCompData(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"));
 	}
 
 	public static File runGridSens(File file, File fileDonnee, String name) throws Exception {
-		File[] fileAnalyse = DataSetSelec.selectFileAnalyse(fileDonnee);
+		File[] fileAnalyse = DataSetSelec.selectFileAnalyse(fileDonnee, file);
 		File discreteFile = fileAnalyse[0];
 		File batiFile = fileAnalyse[1];
 		File morphoFile = fileAnalyse[2];
@@ -94,7 +96,7 @@ public class RasterAnalyseTask {
 			RasterMergeResult resultMergedSeuil = RasterAnalyse.mergeRasters(listSeuil, listSeuil.get(0));
 			RasterAnalyse.createStatsDescriptive(name + ("SeuilComparison"), resultMergedSeuil);
 			// don't know why this one crashes coz of a lock
-			// RasterAnalyse.createStatsDiscrete(name + ("SeuilComparisonDiscrete"), resultMergedSeuil, discreteFile);
+			RasterAnalyse.createStatsDiscrete(name + ("SeuilComparisonDiscrete"), resultMergedSeuil, discreteFile);
 			rastFile.mkdirs();
 			RasterMerge.merge(listSeuil,
 					new File(rastFile,
@@ -114,7 +116,7 @@ public class RasterAnalyseTask {
 
 			RasterMergeResult resultMergedSeuil = RasterAnalyse.mergeRasters(listGrid, listGrid.get(0));
 			RasterAnalyse.createStatsDescriptive(name + ("GridComparison"), resultMergedSeuil);
-			// RasterAnalyse.createStatsDiscrete(name + ("GridComparisonDiscrete"), resultMergedSeuil, discreteFile);
+			RasterAnalyse.createStatsDiscrete(name + ("GridComparisonDiscrete"), resultMergedSeuil, discreteFile);
 			rastFile.mkdirs();
 			RasterMerge.merge(listGrid,
 					new File(rastFile,
@@ -128,22 +130,9 @@ public class RasterAnalyseTask {
 	}
 
 	public static File runStab(File file, File fileDonnee, String name) throws Exception {
-		File[] fileAnalyse = DataSetSelec.selectFileAnalyse(fileDonnee);
-		File discreteFile = fileAnalyse[0];
-		File batiFile = fileAnalyse[1];
-		return runStab(file, discreteFile, batiFile, name);
-	}
 
-	public static File runStab(File[] files, File fileDonnee, File outDir, String name) throws Exception {
-		File[] fileAnalyse = DataSetSelec.selectFileAnalyse(fileDonnee);
-		File discreteFile = fileAnalyse[0];
-		File batiFile = fileAnalyse[1];
-		return runStab(files, discreteFile, batiFile, outDir, name);
-	}
-
-	public static File runStab(File file, File discreteFile, File batiFile, String name) throws Exception {
-System.out.println("analysis with " + discreteFile + " and " + batiFile);
-System.out.println("root " + file);
+		File discreteFile = getDiscrete(fileDonnee);
+		System.out.println("root " + file);
 		// folder settings
 		File resultFile = new File(file, "result--" + name);
 		resultFile.mkdir();
@@ -204,7 +193,7 @@ System.out.println("root " + file);
 				RasterAnalyse.createStatEvals(mergedResult.getCellEval(), evalTotal);
 
 				// discrete statistics
-				// je ne sais pourquoi celle ci ne marche pas .. .. ..
+				System.out.println("discrete file found : " + discreteFile);
 				RasterAnalyse.createStatsDiscrete(nameTest, mergedResult, discreteFile);
 
 				// create a merged raster
@@ -228,19 +217,21 @@ System.out.println("root " + file);
 
 				// fractal dimention calculation
 				int resolution = 4;
-				FractalDimention.getCorrFracDimfromSimu(batiFile, file, statFile, echelle, resolution);
+				FractalDimention.getCorrFracDimfromSimu(getBuild(fileDonnee, arL), file, statFile, echelle, resolution);
 			}
 		}
 		return resultFile;
 	}
 
-	public static File runStab(File[] files, File discreteFile, File batiFile, File outDir, String name) throws Exception {
+	public static File runStab(File[] files, File fileDonnee, File outDir, String name) throws Exception {
 
 		// folder settings
 		File resultFile = new File(outDir, "result--" + name);
 		resultFile.mkdir();
 		RasterAnalyse.rootFile = outDir;
 		RasterAnalyse.stabilite = true;
+
+		File discreteFile = getDiscrete(fileDonnee);
 
 		// Count how much 20m cells are contained into parent cells
 		Hashtable<DirectPosition2D, Float> SvgCellEval20 = new Hashtable<DirectPosition2D, Float>();
@@ -296,7 +287,6 @@ System.out.println("root " + file);
 				RasterAnalyse.createStatEvals(mergedResult.getCellEval(), evalTotal);
 
 				// discrete statistics
-				// je ne sais pourquoi celle ci ne marche pas .. .. ..
 				RasterAnalyse.createStatsDiscrete(nameTest, mergedResult, discreteFile);
 
 				// create a merged raster
@@ -320,18 +310,11 @@ System.out.println("root " + file);
 
 				// fractal dimention calculation
 				int resolution = 4;
-				FractalDimention.getCorrFracDimfromSimu(batiFile, files, statFile, echelle, resolution);
+
+				FractalDimention.getCorrFracDimfromSimu(getBuild(fileDonnee, arL), files, statFile, echelle, resolution);
 			}
 		}
 		return resultFile;
-	}
-
-	public static File runCompData(File file, File fileDonnee) throws Exception {
-		File[] fileAnalyse = DataSetSelec.selectFileAnalyse(fileDonnee);
-		File discreteFile = fileAnalyse[0];
-		File batiFile = fileAnalyse[1];
-		String name = file.getName();
-		return runCompData(file, discreteFile, batiFile, name);
 	}
 
 	/**
@@ -343,20 +326,57 @@ System.out.println("root " + file);
 	 * @return
 	 * @throws Exception
 	 */
-	public static File runCompData(File file, File discreteFile, File batiFile, String name) throws Exception {
+	public static File runCompData(File file, File fileDonnee, String name) throws Exception {
 
-		// faire pour les trois échelles
-
+	}
+		public static File runCompData(File[] file, File fileDonnee, String name) throws Exception {
+		
 		RasterAnalyse.rootFile = file;
 
 		File resultFile = new File(file, "result--" + name);
-
+		File discreteFile = getDiscrete(fileDonnee);
 		Analyse compDonnee = new Analyse(file, name);
-		List<List<ScenarAnalyse>> scenars = compDonnee.getScenars();
+		List<ProjetAnalyse> listProj = compDonnee.getProjectCollec();
 
-		for (List<ScenarAnalyse> scenarToTest : scenars) {
+		List<Pair> listPair = new ArrayList<>();
+		Pair<String, String> pair = new MutablePair("Manuel", "RouteAutom");
+		listPair.add(pair);
+		pair = new MutablePair("Manuel", "BatiAutom");
+		listPair.add(pair);
+		pair = new MutablePair("Manuel", "TransportAutom");
+		listPair.add(pair);
+		pair = new MutablePair("Manuel", "LoisirAutom");
+		listPair.add(pair);
+		pair = new MutablePair("Manuel", "ServiceAutom");
+		listPair.add(pair);
+		pair = new MutablePair("Manuel", "LoisirServiceAutom");
+		listPair.add(pair);
+		pair = new MutablePair("Autom", "LoisirManu");
+		listPair.add(pair);
+		pair = new MutablePair("Autom", "ServiceManu");
+		listPair.add(pair);
+		pair = new MutablePair("Autom", "ServiceLoisirManu");
+		listPair.add(pair);
 
-			int minSizeCell = Integer.valueOf(scenarToTest.get(0).getSizeCell());
+		for (Pair<String, String> zePair : listPair) {
+
+			ScenarAnalyse firstSc = null;
+			ScenarAnalyse secSc = null;
+
+			for (List<ScenarAnalyse> scenars : compDonnee.getScenars()) {
+				for (ScenarAnalyse scenar : scenars) {
+					if (scenar.getData().equals((String) zePair.getLeft())) {
+						firstSc = scenar;
+					} else if (scenar.getData().equals((String) zePair.getRight())) {
+						secSc = scenar;
+					} else {
+						System.out.println("nothing found");
+						break;
+					}
+				}
+			}
+
+			int minSizeCell = Integer.valueOf(secSc.getSizeCell());
 
 			// for each scale
 			for (int ech = minSizeCell; ech <= minSizeCell * 9; ech = ech * 3) {
@@ -364,19 +384,18 @@ System.out.println("root " + file);
 				RasterAnalyse.echelle = echelle;
 
 				List<File> fileToTest = new ArrayList<>();
-				for (ScenarAnalyse sc : scenarToTest) {
-					fileToTest.add(sc.getSimuFile(echelle));
-				}
-
+				fileToTest.add(firstSc.getSimuFile(echelle));
+				fileToTest.add(secSc.getSimuFile(echelle));
 				copyExample(fileToTest.get(0), resultFile);
 				RasterMergeResult result = RasterAnalyse.mergeRasters(fileToTest);
 
+				String nameComp = firstSc.getData() + "-CompareTo-" + secSc.getData();
 				// statistics
-				File statFile = new File(resultFile, "stat-" + scenarToTest.get(5).getScenarName());
+				File statFile = new File(resultFile, "stat-" + nameComp);
 				RasterAnalyse.statFile = statFile;
 
 				RasterAnalyse.createStatsDescriptive(name + "-" + echelle, result);
-				RasterMerge.merge(fileToTest, new File(resultFile, scenarToTest.get(5).getScenarName() + "-rasterMerged-" + ech + ".0.tif"), ech);
+				RasterMerge.merge(fileToTest, new File(resultFile, nameComp + "-rasterMerged-" + ech + ".0.tif"), ech);
 				RasterAnalyse.createStatsDiscrete(name + "-" + echelle, result, discreteFile);
 			}
 		}
@@ -429,6 +448,41 @@ System.out.println("root " + file);
 			}
 		}
 		throw new FileNotFoundException("Example file not found");
+	}
+
+	public static File getDiscrete(File fileDonnee) {
+		File discreteFile = new File("");
+		for (File filesDonnee : fileDonnee.listFiles()) {
+			try {
+				for (File fileShp : filesDonnee.listFiles()) {
+					if (fileShp.getName().equals("discreteFile.shp")) {
+						discreteFile = fileShp;
+						break;
+					}
+				}
+			} catch (NullPointerException e) { // Si les données sont toutes dans un unique répertoire
+				if (filesDonnee.getName().equals("discreteFile.shp")) {
+					discreteFile = filesDonnee;
+
+					break;
+				}
+			}
+		}
+		return discreteFile;
+	}
+
+	public static File getBuild(File fileDonnee, List<ScenarAnalyse> arL) {
+		File batiFile = new File("");
+		for (File filesDonnee : fileDonnee.listFiles()) {
+			if (filesDonnee.toString().equals(arL.get(0).getData())) {
+				for (File fileShp : filesDonnee.listFiles()) {
+					if (fileShp.toString().startsWith("batiment")) {
+						batiFile = fileShp;
+					}
+				}
+			}
+		}
+		return batiFile;
 	}
 
 	public static void copyDirectory(File copDir, File destinationDir) throws IOException {

@@ -1,0 +1,20 @@
+val resultFile = Val[File]
+val resultFolder = Val[File]
+val folderIn =Val[File]
+val name = Val[String]
+
+val ResultTask = ScalaTask("""
+|import fr.ign.task._
+|val resultFile=withThreadClassLoader(classLoader(fracgisplugin.CompDonneeAnalysisTask))(fracgisplugin.CompDonneeAnalysisTask.apply(resultFolder, folderIn, name))""".stripMargin) set (
+  plugins += pluginsOf(fracgisplugin.CompDonneeAnalysisTask),
+  resultFolder := workDirectory / "results",
+  folderIn := workDirectory / "data", //dépend du deuxième arg du nom
+  name := "Stability",
+  inputs += (resultFolder, folderIn,name),
+  outputs += (resultFile,name)
+)
+
+val env = LocalEnvironment(1)
+//val copyHook =  CopyFileHook(resultFile)
+
+ResultTask on env // hook copyHook

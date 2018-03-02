@@ -131,7 +131,13 @@ public class Analyse {
 	public int getNumberProject() {
 		return projetCollec.size();
 	}
-
+	public List<ProjetAnalyse> getProjectCollec() {
+		return projetCollec;
+	}
+	public List<ScenarAnalyse> getScenarCollec() {
+		return scenarCollec;
+	}
+	
 	public List<List<ScenarAnalyse>> getProjetBySeuil() throws FileNotFoundException {
 		List<List<ProjetAnalyse>> listGen = new ArrayList<List<ProjetAnalyse>>();
 		for (String cellMin : cellMinCollec)
@@ -185,6 +191,24 @@ public class Analyse {
 		return listGen;
 	}
 
+	public List<List<ProjetAnalyse>> getProjetByData() {
+		List<List<ProjetAnalyse>> listGen = new ArrayList<List<ProjetAnalyse>>();
+		for (String seuil : seuilCollec) {
+			for (String grid : gridCollec) {
+				for (String cellMin : cellMinCollec) {
+					List<ProjetAnalyse> particularList = new ArrayList<ProjetAnalyse>();
+					for (ProjetAnalyse pa : projetCollec) {
+						if (pa.getSeuil().equals(seuil) && pa.getSizeCell().equals(cellMin) && pa.getGrid().equals(grid)) {
+							particularList.add(pa);
+						}
+					}
+					listGen.add(particularList);
+				}
+			}
+		}
+		return listGen;
+	}
+	
 	public List<List<ScenarAnalyse>> getScenarPerProject() {
 		List<List<ScenarAnalyse>> result = new ArrayList<>();
 		for (ProjetAnalyse proj : projetCollec) {
@@ -243,7 +267,6 @@ public class Analyse {
 			}
 		}
 		return listScenars;
-
 	}
 
 	public List<List<ScenarAnalyse>> getScenarDiffSeed() throws FileNotFoundException {

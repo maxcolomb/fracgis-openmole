@@ -27,7 +27,6 @@ import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.feature.DefaultFeatureCollection;
-import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.gce.geotiff.GeoTiffReader;
@@ -236,18 +235,25 @@ public class RasterAnalyse {
 		SimpleFeatureSource grid = Grids.createSquareGrid(gridBounds, cellSize);
 
 		int i = 0;
-		for (Object object : grid.getFeatures().toArray()) {
-			SimpleFeature feat = (SimpleFeature) object;
-			DirectPosition2D coord = new DirectPosition2D((feat.getBounds().getMaxX() - feat.getBounds().getHeight() / 2),
-					(feat.getBounds().getMaxY() - feat.getBounds().getHeight() / 2));
-			float[] yo = (float[]) coverage.evaluate(coord);
-			if (yo[0] > 0) {
-				i = i + 1;
-				Object[] attr = { yo[0] };
-				sfBuilder.add(wktReader.read(feat.getDefaultGeometry().toString()));
-				SimpleFeature feature = sfBuilder.buildFeature("id" + i, attr);
-				victory.add(feature);
+		SimpleFeatureIterator featureIt = grid.getFeatures().features();
+		try {
+			while (featureIt.hasNext()) {
+				SimpleFeature feat = featureIt.next();
+				DirectPosition2D coord = new DirectPosition2D((feat.getBounds().getMaxX() - feat.getBounds().getHeight() / 2),
+						(feat.getBounds().getMaxY() - feat.getBounds().getHeight() / 2));
+				float[] yo = (float[]) coverage.evaluate(coord);
+				if (yo[0] > 0) {
+					i = i + 1;
+					Object[] attr = { yo[0] };
+					sfBuilder.add(wktReader.read(feat.getDefaultGeometry().toString()));
+					SimpleFeature feature = sfBuilder.buildFeature("id" + i, attr);
+					victory.add(feature);
+				}
 			}
+		} catch (Exception problem) {
+			problem.printStackTrace();
+		} finally {
+			featureIt.close();
 		}
 		// exportSFC(victory.collection(), new File("home/mcolomb/tmp/outMupEx.shp"));
 		return victory.collection();
@@ -313,16 +319,24 @@ public class RasterAnalyse {
 
 		for (String[] differentObject : tabDifferentObjects.values()) {
 
-			SimpleFeatureCollection discrete = (new ShapefileDataStore(discreteFile.toURI().toURL())).getFeatureSource().getFeatures();
+			ShapefileDataStore discreteSDS = new ShapefileDataStore(discreteFile.toURI().toURL());
+			SimpleFeatureCollection discrete = discreteSDS.getFeatureSource().getFeatures();
 			Hashtable<String, double[]> result = new Hashtable<>();
 			String[] firstCol = new String[listfile.size() * 2 + 1];
 			firstCol[0] = differentObject[0];
 			int scenar = 1;
 
 			// instanciation of the different entities in the result
-			for (Object obj : discrete.toArray()) {
-				String city = (String) ((SimpleFeature) obj).getAttribute(differentObject[1]);
-				result.put(city, new double[0]);
+			SimpleFeatureIterator discreteIt = discrete.features();
+			try {
+				while (discreteIt.hasNext()) {
+					String city = (String) (discreteIt.next()).getAttribute(differentObject[1]);
+					result.put(city, new double[0]);
+				}
+			} catch (Exception problem) {
+				problem.printStackTrace();
+			} finally {
+				discreteIt.close();
 			}
 			for (ScenarAnalyse sA : listfile) {
 
@@ -334,28 +348,42 @@ public class RasterAnalyse {
 				SimpleFeatureCollection output = createMupOutput(importRaster(sA.getSimuFile(echelle)), size);
 				Hashtable<String, Double> entitySurf = new Hashtable<String, Double>();
 				Hashtable<String, Double> entityNumber = new Hashtable<String, Double>();
-				for (Object obj : discrete.toArray()) {
-					SimpleFeature city = (SimpleFeature) obj;
-					String entityName = (String) city.getAttribute(differentObject[1]);
-					for (Object objet : output.toArray()) {
-						SimpleFeature cell = (SimpleFeature) objet;
-						if (((Geometry) city.getDefaultGeometry()).intersects((Geometry) cell.getDefaultGeometry())) {
-							double surf = ((Geometry) city.getDefaultGeometry()).intersection((Geometry) cell.getDefaultGeometry()).getArea();
-							if (entitySurf.containsKey(entityName)) {
-								double temp = entitySurf.get(entityName) + surf;
-								entitySurf.remove(entityName);
-								entitySurf.put(entityName, temp);
+				SimpleFeatureIterator discreteIt2 = discrete.features();
+				try {
+					while (discreteIt2.hasNext()) {
+						SimpleFeature city = discreteIt2.next();
+						String entityName = (String) city.getAttribute(differentObject[1]);
+						SimpleFeatureIterator outputIt = output.features();
+						try {
+							while (outputIt.hasNext()) {
+								SimpleFeature cell = outputIt.next();
+								if (((Geometry) city.getDefaultGeometry()).intersects((Geometry) cell.getDefaultGeometry())) {
+									double surf = ((Geometry) city.getDefaultGeometry()).intersection((Geometry) cell.getDefaultGeometry()).getArea();
+									if (entitySurf.containsKey(entityName)) {
+										double temp = entitySurf.get(entityName) + surf;
+										entitySurf.remove(entityName);
+										entitySurf.put(entityName, temp);
 
-								double tempNb = entityNumber.get(entityName) + 1;
-								entityNumber.remove(entityName);
-								entityNumber.put(entityName, tempNb);
+										double tempNb = entityNumber.get(entityName) + 1;
+										entityNumber.remove(entityName);
+										entityNumber.put(entityName, tempNb);
 
-							} else {
-								entitySurf.put(entityName, surf);
-								entityNumber.put(entityName, (double) 1);
+									} else {
+										entitySurf.put(entityName, surf);
+										entityNumber.put(entityName, (double) 1);
+									}
+								}
 							}
+						} catch (Exception problem) {
+							problem.printStackTrace();
+						} finally {
+							outputIt.close();
 						}
 					}
+				} catch (Exception problem) {
+					problem.printStackTrace();
+				} finally {
+					discreteIt2.close();
 				}
 
 				// put the values into the right case
@@ -379,6 +407,7 @@ public class RasterAnalyse {
 				}
 			}
 			generateCsvFile(result, statFile, name + "-surfaceOfCells" + "-" + differentObject[0], firstCol);
+			discreteSDS.dispose();
 		}
 	}
 
@@ -422,7 +451,7 @@ public class RasterAnalyse {
 	}
 
 	public static RasterMergeResult mergeRasters(List<File> listRepliFile) throws Exception {
-System.out.println("merging " + listRepliFile.size() + " rasters");
+		System.out.println("merging " + listRepliFile.size() + " rasters");
 		// variables to create statistics
 
 		DescriptiveStatistics statNb = new DescriptiveStatistics();
@@ -442,7 +471,7 @@ System.out.println("merging " + listRepliFile.size() + " rasters");
 
 		// loop on the different cells
 		for (File f : listRepliFile) {
-System.out.println("import " + f);
+			System.out.println("import " + f);
 			GridCoverage2D coverage = importRaster(f);
 
 			if (env == null) {
@@ -542,7 +571,6 @@ System.out.println("import " + f);
 		// loop on those different objects
 		for (String[] differentObject : tabDifferentObjects.values()) {
 
-	
 			String[] nameLineFabric = new String[5];
 			nameLineFabric[0] = differentObject[0] + " name - echelle " + echelle;
 			nameLineFabric[1] = "Total Cells";
@@ -554,51 +582,52 @@ System.out.println("import " + f);
 			Hashtable<String, List<Double>> evals = new Hashtable<String, List<Double>>();
 
 			System.out.println("pour le sujet " + differentObject[0]);
-			SimpleFeatureCollection fabricType = (new ShapefileDataStore(discreteFile.toURI().toURL())).getFeatureSource().getFeatures();
+			ShapefileDataStore fabricSDS = new ShapefileDataStore(discreteFile.toURI().toURL());
+			SimpleFeatureCollection fabricType = fabricSDS.getFeatureSource().getFeatures();
+
 			GeometryFactory factory = new GeometryFactory();
-
-			// pour toutes les villes
-			// ce serait plus jolie mais ça me mets une erreure
-			// try (SimpleFeatureIterator iteratorCity = fabricType.features()) {
-			// while (iteratorCity.hasNext()) {
-			// SimpleFeature city = iteratorCity.next();
-			for (Object obj : fabricType.toArray()) {
-				SimpleFeature city = (SimpleFeature) obj;
-				double[] resultFabric = new double[4];
-
-				String fabricName = (String) city.getAttribute(differentObject[1]);
-				// pour toutes les cellules
-				for (DirectPosition2D coordCell : result.getCellRepet().keySet()) {
-					if (((Geometry) city.getDefaultGeometry()).covers(factory.createPoint(new Coordinate(coordCell.getX(), coordCell.getY())))) {
-						// si le tissus a déja été implémenté
-						if (cellByFabric.containsKey(fabricName)) {
-							double[] resultFabricPast = cellByFabric.get(fabricName);
-							resultFabric[0] = resultFabricPast[0] + 1;
-							// si la cellule est stable
-							if (result.getCellRepet().get(coordCell) == result.getNbScenar()) {
-								resultFabric[1] = resultFabricPast[1] + 1;
-								resultFabric[2] = resultFabricPast[2];
+			SimpleFeatureIterator iteratorCity = fabricType.features();
+			try {
+				// Pour toutes les entitées
+				while (iteratorCity.hasNext()) {
+					SimpleFeature city = iteratorCity.next();
+					double[] resultFabric = new double[4];
+					String fabricName = (String) city.getAttribute(differentObject[1]);
+					// pour toutes les cellules
+					for (DirectPosition2D coordCell : result.getCellRepet().keySet()) {
+						if (((Geometry) city.getDefaultGeometry()).covers(factory.createPoint(new Coordinate(coordCell.getX(), coordCell.getY())))) {
+							// si le tissus a déja été implémenté
+							if (cellByFabric.containsKey(fabricName)) {
+								double[] resultFabricPast = cellByFabric.get(fabricName);
+								resultFabric[0] = resultFabricPast[0] + 1;
+								// si la cellule est stable
+								if (result.getCellRepet().get(coordCell) == result.getNbScenar()) {
+									resultFabric[1] = resultFabricPast[1] + 1;
+									resultFabric[2] = resultFabricPast[2];
+								}
+								// ou non
+								else {
+									resultFabric[2] = resultFabricPast[2] + 1;
+									resultFabric[1] = resultFabricPast[1];
+								}
+								cellByFabric.put(fabricName, resultFabric);
 							}
-							// ou non
+							// si le tissus n'as jamais été implémenté
 							else {
-								resultFabric[2] = resultFabricPast[2] + 1;
-								resultFabric[1] = resultFabricPast[1];
+								resultFabric[0] = (double) 1;
+								// si la cellule est stable
+								if (result.getCellRepet().get(coordCell) == result.getNbScenar()) {
+									resultFabric[1] = (double) 1;
+									resultFabric[2] = (double) 0;
+								}
+								// ou non
+								else {
+									resultFabric[2] = (double) 1;
+									resultFabric[1] = (double) 0;
+								}
+								cellByFabric.put(fabricName, resultFabric);
 							}
-							cellByFabric.put(fabricName, resultFabric);
-						}
-						// si le tissus n'as jamais été implémenté
-						else {
-							resultFabric[0] = (double) 1;
-							// si la cellule est stable
-							if (result.getCellRepet().get(coordCell) == result.getNbScenar()) {
-								resultFabric[1] = (double) 1;
-								resultFabric[2] = (double) 0;
-							}
-							// ou non
-							else {
-								resultFabric[2] = (double) 1;
-								resultFabric[1] = (double) 0;
-							}
+							// pour calculer les évaluations 
 							List<Double> salut = new ArrayList<>();
 							if (evals.contains(fabricName)) {
 								salut = evals.get(fabricName);
@@ -606,16 +635,19 @@ System.out.println("import " + f);
 							salut.add((double) result.getCellEval().get(coordCell));
 							evals.put(fabricName, salut);
 
-							cellByFabric.put(fabricName, resultFabric);
 						}
 					}
 				}
+			} catch (Exception problem) {
+				problem.printStackTrace();
+			} finally {
+				iteratorCity.close();
 			}
 			// put the evals in
 			for (String fabricName : evals.keySet()) {
 				double sum = 0;
 				for (double db : evals.get(fabricName)) {
-					sum = sum + db;
+					sum = +db;
 				}
 				double[] finalle = cellByFabric.get(fabricName);
 				finalle[3] = sum / evals.size();
@@ -623,6 +655,7 @@ System.out.println("import " + f);
 			}
 
 			generateCsvFile(cellByFabric, statFile, ("cellBy" + differentObject[0] + "For-" + nameScenar), nameLineFabric);
+			fabricSDS.dispose();
 		}
 		return statFile;
 	}
@@ -855,7 +888,6 @@ System.out.println("import " + f);
 
 		StatTab tableauStat = new StatTab("descriptive_statistics", nameScenar, tableauFinal, premiereCol);
 		tableauStat.toCsv(statFile, firstline);
-		firstline = false;
 
 		return statFile;
 	}
