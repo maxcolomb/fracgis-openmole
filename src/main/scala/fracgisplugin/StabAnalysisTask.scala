@@ -3,7 +3,7 @@ package fracgisplugin
 import java.io.File
 import fr.ign.task._
 
-trait AnalysisTask {
+trait StabAnalysisTask {
   def apply(inputFolders: Array[File], dataFolder: File, outputFolder: File, name: String): File = {
     fr.ign.task.RasterAnalyseTask.runStab(inputFolders, dataFolder, outputFolder, name)
   }
@@ -12,4 +12,4 @@ trait AnalysisTask {
   }
 }
 
-object AnalysisTask extends AnalysisTask
+object StabAnalysisTask extends StabAnalysisTask

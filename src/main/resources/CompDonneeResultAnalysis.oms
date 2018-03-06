@@ -9,7 +9,7 @@ val ResultTask = ScalaTask("""
   plugins += pluginsOf(fracgisplugin.CompDonneeAnalysisTask),
   resultFolder := workDirectory / "results",
   folderIn := workDirectory / "data", //dépend du deuxième arg du nom
-  name := "Stability",
+  name := "CompDonnee",
   inputs += (resultFolder, folderIn,name),
   outputs += (resultFile,name)
 )

@@ -33,7 +33,6 @@ public class Analyse {
 		for (File folderProjet : files) {
 			if (folderProjet.isDirectory() && folderProjet.getName().startsWith(name)) {
 				String nameProj = folderProjet.getName();
-				System.out.println("nameProj " + nameProj);
 
 				Pattern tiret = Pattern.compile("-");
 				String[] decompNameProj = tiret.split(nameProj);
@@ -67,7 +66,6 @@ public class Analyse {
 				// set scenar
 				for (File scenarFile : folderProjet.listFiles()) {
 					if (scenarFile.getName().startsWith("N")) {
-						System.out.println("scenarFile " + scenarFile);
 						Pattern underscore = Pattern.compile("_");
 						String[] decompScenar = underscore.split(scenarFile.getName());
 						if (!nMaxCollec.contains(decompScenar[0])) {
@@ -98,7 +96,6 @@ public class Analyse {
 						for (String data : dataCollec) {
 							if (fileProjet.getName().contains("CM" + size) && fileProjet.getName().contains("GP_" + grid) && fileProjet.getName().contains("S" + seuil)
 									&& fileProjet.getName().contains(data)) {
-								System.out.println("analyse " + fileProjet);
 								ProjetAnalyse proj = new ProjetAnalyse(fileProjet, size, grid, seuil, data);
 								projetCollec.add(proj);
 								for (File fileScenar : fileProjet.listFiles()) {
@@ -111,7 +108,6 @@ public class Analyse {
 																&& fileScenar.getName().contains(yag) && fileScenar.getName().contains(ahp)
 																&& fileScenar.getName().contains(seed.toString())) {
 															ScenarAnalyse sC = new ScenarAnalyse(fileProjet, size, grid, seuil, data, nMax, ahp, strict, yag, fileScenar, seed);
-															System.out.println("ScenarAnalyse " + sC);
 															scenarCollec.add(sC);
 														}
 													}

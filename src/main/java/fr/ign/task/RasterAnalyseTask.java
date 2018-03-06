@@ -31,11 +31,11 @@ public class RasterAnalyseTask {
 		// File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/gridExploProjets2");
 		// runGridSens(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"), "gridExplo");
 
-		File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/compDonnee");
-		System.out.println(runStab(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"), "compDonnee"));
+//		File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/compDonnee");
+//		System.out.println(runStab(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"), "compDonnee"));
 
-		// File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/compDonnee");
-		// runCompData(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"));
+		 File file = new File("/home/mcolomb/.openmole/RKS1409W205-Ubuntu/webui/projects/results");
+		 runCompData(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"),"CompDonnee");
 	}
 
 	public static File runGridSens(File file, File fileDonnee, String name) throws Exception {
@@ -328,15 +328,21 @@ public class RasterAnalyseTask {
 	 */
 	public static File runCompData(File file, File fileDonnee, String name) throws Exception {
 
-	}
-		public static File runCompData(File[] file, File fileDonnee, String name) throws Exception {
+//		return runCompData(file.listFiles(), fileDonnee, name);
+//	}
+//
+//	public static File runCompData(File[] file, File fileDonnee, String name) throws Exception {
+//
+//		RasterAnalyse.rootFile = file[0].getParentFile();
+//
+//		File resultFile = new File(file[0].getParentFile(), "result--" + name);
 		
 		RasterAnalyse.rootFile = file;
 
 		File resultFile = new File(file, "result--" + name);
+
 		File discreteFile = getDiscrete(fileDonnee);
 		Analyse compDonnee = new Analyse(file, name);
-		List<ProjetAnalyse> listProj = compDonnee.getProjectCollec();
 
 		List<Pair> listPair = new ArrayList<>();
 		Pair<String, String> pair = new MutablePair("Manuel", "RouteAutom");
@@ -355,24 +361,23 @@ public class RasterAnalyseTask {
 		listPair.add(pair);
 		pair = new MutablePair("Autom", "ServiceManu");
 		listPair.add(pair);
-		pair = new MutablePair("Autom", "ServiceLoisirManu");
+		pair = new MutablePair("Autom", "LoisirServiceManu");
 		listPair.add(pair);
 
 		for (Pair<String, String> zePair : listPair) {
-
 			ScenarAnalyse firstSc = null;
 			ScenarAnalyse secSc = null;
 
 			for (List<ScenarAnalyse> scenars : compDonnee.getScenars()) {
+			
 				for (ScenarAnalyse scenar : scenars) {
 					if (scenar.getData().equals((String) zePair.getLeft())) {
 						firstSc = scenar;
+						System.out.println(scenar.getScenarName()+scenar.getNameProjet());
 					} else if (scenar.getData().equals((String) zePair.getRight())) {
 						secSc = scenar;
-					} else {
-						System.out.println("nothing found");
-						break;
-					}
+						System.out.println(zePair.getRight());
+					} 
 				}
 			}
 
