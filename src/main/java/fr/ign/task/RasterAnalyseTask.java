@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.ListIterator;
 
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -19,7 +18,6 @@ import fr.ign.analyse.RasterAnalyse;
 import fr.ign.analyse.RasterMerge;
 import fr.ign.analyse.RasterMergeResult;
 import fr.ign.analyse.obj.Analyse;
-import fr.ign.analyse.obj.ProjetAnalyse;
 import fr.ign.analyse.obj.ScenarAnalyse;
 import fr.ign.exp.DataSetSelec;
 
@@ -31,11 +29,11 @@ public class RasterAnalyseTask {
 		// File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/gridExploProjets2");
 		// runGridSens(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"), "gridExplo");
 
-//		File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/compDonnee");
-//		System.out.println(runStab(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"), "compDonnee"));
+		// File file = new File("/home/mcolomb/workspace/mupcity-openMole/result/compDonnee");
+		// System.out.println(runStab(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"), "compDonnee"));
 
-		 File file = new File("/home/mcolomb/.openmole/RKS1409W205-Ubuntu/webui/projects/results");
-		 runCompData(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"),"CompDonnee");
+		File file = new File("/home/mcolomb/.openmole/RKS1409W205-Ubuntu/webui/projects/results");
+		runCompData(file, new File("/home/mcolomb/workspace/mupcity-openMole/data/"), "CompDonnee");
 	}
 
 	public static File runGridSens(File file, File fileDonnee, String name) throws Exception {
@@ -328,15 +326,15 @@ public class RasterAnalyseTask {
 	 */
 	public static File runCompData(File file, File fileDonnee, String name) throws Exception {
 
-//		return runCompData(file.listFiles(), fileDonnee, name);
-//	}
-//
-//	public static File runCompData(File[] file, File fileDonnee, String name) throws Exception {
-//
-//		RasterAnalyse.rootFile = file[0].getParentFile();
-//
-//		File resultFile = new File(file[0].getParentFile(), "result--" + name);
-		
+		// return runCompData(file.listFiles(), fileDonnee, name);
+		// }
+		//
+		// public static File runCompData(File[] file, File fileDonnee, String name) throws Exception {
+		//
+		// RasterAnalyse.rootFile = file[0].getParentFile();
+		//
+		// File resultFile = new File(file[0].getParentFile(), "result--" + name);
+
 		RasterAnalyse.rootFile = file;
 
 		File resultFile = new File(file, "result--" + name);
@@ -369,15 +367,15 @@ public class RasterAnalyseTask {
 			ScenarAnalyse secSc = null;
 
 			for (List<ScenarAnalyse> scenars : compDonnee.getScenars()) {
-			
+
 				for (ScenarAnalyse scenar : scenars) {
 					if (scenar.getData().equals((String) zePair.getLeft())) {
 						firstSc = scenar;
-						System.out.println(scenar.getScenarName()+scenar.getNameProjet());
+						System.out.println(scenar.getScenarName() + scenar.getNameProjet());
 					} else if (scenar.getData().equals((String) zePair.getRight())) {
 						secSc = scenar;
 						System.out.println(zePair.getRight());
-					} 
+					}
 				}
 			}
 
@@ -468,7 +466,6 @@ public class RasterAnalyseTask {
 			} catch (NullPointerException e) { // Si les données sont toutes dans un unique répertoire
 				if (filesDonnee.getName().equals("discreteFile.shp")) {
 					discreteFile = filesDonnee;
-
 					break;
 				}
 			}

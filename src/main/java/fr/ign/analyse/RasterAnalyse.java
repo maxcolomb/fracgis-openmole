@@ -296,8 +296,10 @@ public class RasterAnalyse {
 			}
 		} else {
 			System.out.println(typeName + " does not support read/write access");
+			newDataStore.dispose();
 			System.exit(1);
 		}
+		newDataStore.dispose();
 		return fileName;
 	}
 
@@ -627,7 +629,7 @@ public class RasterAnalyse {
 								}
 								cellByFabric.put(fabricName, resultFabric);
 							}
-							// pour calculer les évaluations 
+							// pour calculer les évaluations
 							List<Double> salut = new ArrayList<>();
 							if (evals.contains(fabricName)) {
 								salut = evals.get(fabricName);
@@ -765,12 +767,11 @@ public class RasterAnalyse {
 			tableauFinal[14] = correlationCoefficient;
 			premiereCol[14] = ("coefficient de correlation entre le nombre de réplication et les évaluations des cellules");
 		} else {
-			if (tableauMoy.length>1){
-			double correlationCoefficient = new Covariance().covariance(tableauMoy, tableauRepl);
-			tableauFinal[21] = correlationCoefficient;
-			premiereCol[21] = ("coefficient de correlation entre le nombre de réplication et les évaluations des cellules");
-			}
-			else{
+			if (tableauMoy.length > 1) {
+				double correlationCoefficient = new Covariance().covariance(tableauMoy, tableauRepl);
+				tableauFinal[21] = correlationCoefficient;
+				premiereCol[21] = ("coefficient de correlation entre le nombre de réplication et les évaluations des cellules");
+			} else {
 				tableauFinal[21] = 99;
 			}
 		}
