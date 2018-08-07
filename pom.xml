@@ -3,11 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>fr.ign</groupId>
 	<artifactId>fracgis-openMole</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.7.2-COGIT-SNAPSHOT</version>
 	<description>Projet maven type pour produire un jar qui peut être lancé sur OpenMole</description>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<fracgis.version>0.6.3</fracgis.version>
+		<fracgis.version>0.7.2-COGIT-SNAPSHOT</fracgis.version>
+		<geotools.version>19.1</geotools.version>
 	</properties>
 	<build>
 		<plugins>
@@ -75,7 +76,7 @@
 		<dependency>
 			<groupId>org.geotools</groupId>
 			<artifactId>gt-grid</artifactId>
-			<version>16.1</version>
+			<version>${geotools.version}</version>
 		</dependency>
 	</dependencies>
 	<repositories>
@@ -121,4 +122,16 @@
 			<url>http://download.osgeo.org/webdav/geotools/</url>
 		</repository>
 	</repositories>
+	<distributionManagement>
+		<repository>
+			<id>ign-releases</id>
+			<name>Nexus Releases Repository</name>
+			<url>https://forge-cogit.ign.fr/nexus/content/repositories/releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>ign-snapshots</id>
+			<name>Nexus Snapshots Repository</name>
+			<url>https://forge-cogit.ign.fr/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+</distributionManagement>
 </project>
