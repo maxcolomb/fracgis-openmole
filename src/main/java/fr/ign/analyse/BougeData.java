@@ -44,7 +44,7 @@ public class BougeData {
 			for (File aCp : aCopier) {
 				File nf = new File(copierVers, aCp.getName());
 				if (aCp.isFile()) {
-					Files.copy(aCp, nf);
+	//				Files.copy(aCp, nf);
 				}
 			}
 			for (int ii = 1; ii <= 8; ii++) {

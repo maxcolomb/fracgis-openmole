@@ -488,7 +488,7 @@ public class RasterAnalyseTask {
 	public static void copyDirectory(File copDir, File destinationDir) throws IOException {
 		destinationDir.mkdirs();
 		for (File f : copDir.listFiles()) {
-			Files.copy(f, new File(destinationDir, f.getName()));
+//			Files.copy(f, new File(destinationDir, f.getName()));
 		}
 	}
 }
