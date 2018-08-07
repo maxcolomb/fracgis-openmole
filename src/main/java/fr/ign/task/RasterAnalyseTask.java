@@ -11,8 +11,6 @@ import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.geotools.geometry.DirectPosition2D;
 
-import com.google.common.io.Files;
-
 import fr.ign.analyse.FractalDimention;
 import fr.ign.analyse.RasterAnalyse;
 import fr.ign.analyse.RasterMerge;

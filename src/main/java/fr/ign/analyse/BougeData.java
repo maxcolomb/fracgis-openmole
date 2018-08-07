@@ -29,7 +29,6 @@ import org.opengis.filter.FilterFactory2;
 import org.opengis.geometry.MismatchedDimensionException;
 import org.opengis.referencing.operation.TransformException;
 
-import com.google.common.io.Files;
 import com.vividsolutions.jts.geom.Geometry;
 
 public class BougeData {
